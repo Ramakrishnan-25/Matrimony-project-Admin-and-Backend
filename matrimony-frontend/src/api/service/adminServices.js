@@ -1,0 +1,250 @@
+// import { adminInstance } from "../axiosInstance";
+
+// export const registerAdmin = async () => {
+//   const response = await adminInstance.get(`/`);
+//   return response;
+// };
+
+// export const verifyAdmin = async (loginData) => {
+//   const response = await adminInstance.post(`/verify-admin`, { loginData });
+//   return response;
+// };
+
+// export const getAllUserData = async () => {
+//   const response = await adminInstance.get(`/get-all-users`);
+//   return response;
+// };
+
+
+// export const getNewRequestedUsers = async () => {
+//   const response = await adminInstance.get(`/get-all-new-requested-users`);
+//   return response;
+// };
+
+// export const approveNewUser = async (userId) => {
+//   const response = await adminInstance.put(`/approve-new-user/${userId}`);
+//   return response;
+// };
+
+// export const getPaidUserData = async () => {
+//   const response = await adminInstance.get(`/paid-users-data`);
+//   return response;
+// };
+
+
+// export const addNewPlanData = async (planData) => {
+//   const response = await adminInstance.post(`/add-new-plan-data`, { planData });
+//   return response;
+// };
+// export const editPlanData = async (planId, planData) => {
+//   const response = await adminInstance.put(`/edit-plan-data/${planId}`, { planData });
+//   return response;
+// };
+
+// export const getAllPlanData = async () => {
+//   const response = await adminInstance.get(`/get-all-plan-data`);
+//   return response;
+// };
+
+// export const changePlanStatus = async (planId, planStatus) => {
+//   const response = await adminInstance.put(`/edit-plan-status/${planId}`, { planStatus });
+//   return response;
+// };
+
+// // Event Services
+// export const getAllEvents = async () => {
+//   const response = await adminInstance.get(`/get-all-events`);
+//   return response;
+// };
+
+// export const addNewEvent = async (eventData) => {
+//   // eventData should be FormData object
+//   const response = await adminInstance.post(`/add-new-event`, eventData, {
+//     headers: { "Content-Type": "multipart/form-data" },
+//   });
+//   return response;
+// };
+
+// export const editEvent = async (eventId, eventData) => {
+//   const response = await adminInstance.put(`/edit-event/${eventId}`, eventData, {
+//     headers: { "Content-Type": "multipart/form-data" },
+//   });
+//   return response;
+// };
+
+// export const deleteEventData = async (eventId) => {
+//   const response = await adminInstance.delete(`/delete-event/${eventId}`);
+//   return response;
+// };
+
+
+
+
+// // USER MANAGEMENT SERVICES
+
+// export const deleteUserById = async (userId) => {
+//   return await adminInstance.delete(`/delete-user/${userId}`);
+// };
+
+// export const getUserById = async (userId) => {
+//   return await adminInstance.get(`/get-user/${userId}`);
+// };
+
+// export const updateUserById = async (userId, userData) => {
+//   return await adminInstance.put(`/update-user/${userId}`, userData);
+// };
+
+
+
+import { adminInstance } from "../axiosInstance";
+
+/* =========================
+   ADMIN AUTH
+========================== */
+
+export const registerAdmin = async () => {
+  return await adminInstance.get(`/`);
+};
+
+export const verifyAdmin = async (loginData) => {
+  return await adminInstance.post(`/verify-admin`, { loginData });
+};
+
+
+/* =========================
+   USER MANAGEMENT
+========================== */
+
+// Get All Approved Users
+export const getAllUserData = async () => {
+  return await adminInstance.get(`/get-all-users`);
+};
+
+// Get New Requested Users
+export const getNewRequestedUsers = async () => {
+  return await adminInstance.get(`/get-all-new-requested-users`);
+};
+
+// Approve User
+export const approveNewUser = async (userId) => {
+  return await adminInstance.put(`/approve-new-user/${userId}`);
+};
+
+// Get Paid Users
+export const getPaidUserData = async () => {
+  return await adminInstance.get(`/paid-users-data`);
+};
+
+// Soft Delete User
+export const deleteUserById = async (userId) => {
+  return await adminInstance.delete(`/delete-user/${userId}`);
+};
+
+// 🔥 OPTIONAL – Restore User
+export const restoreUserById = async (userId) => {
+  return await adminInstance.put(`/restore-user/${userId}`);
+};
+
+// Get Single User
+export const getUserById = async (userId) => {
+  return await adminInstance.get(`/get-user/${userId}`);
+};
+
+// Update User
+export const updateUserById = async (userId, userData) => {
+  return await adminInstance.put(`/update-user/${userId}`, userData);
+};
+
+
+/* =========================
+   PLAN MANAGEMENT
+========================== */
+
+export const getAllPlanData = async () => {
+  return await adminInstance.get(`/get-all-plan-data`);
+};
+
+export const addNewPlanData = async (planData) => {
+  return await adminInstance.post(`/add-new-plan-data`, { planData });
+};
+
+export const editPlanData = async (planId, planData) => {
+  return await adminInstance.put(`/edit-plan-data/${planId}`, { planData });
+};
+
+export const changePlanStatus = async (planId, planStatus) => {
+  return await adminInstance.put(`/edit-plan-status/${planId}`, { planStatus });
+};
+
+
+/* =========================
+   EVENT MANAGEMENT
+========================== */
+
+export const getAllEvents = async () => {
+  return await adminInstance.get(`/get-all-events`);
+};
+
+export const addNewEvent = async (eventData) => {
+  return await adminInstance.post(`/add-new-event`, eventData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const editEvent = async (eventId, eventData) => {
+  return await adminInstance.put(`/edit-event/${eventId}`, eventData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteEventData = async (eventId) => {
+  return await adminInstance.delete(`/delete-event/${eventId}`);
+};
+
+export const getDeletedUsers = async () => {
+  return await adminInstance.get(`/deleted-users`);
+};
+
+// Delete Additional Images (Admin)
+export const deleteAdditionalImagesByAdmin = async (userId, imagesToDelete) => {
+  try {
+    const response = await adminInstance.post(
+      `/delete-additional-images/${userId}`,
+      { imagesToDelete }
+    );
+    return response;
+  } catch (error) {
+    console.error("Admin: Error deleting additional images:", error);
+    throw error;
+  }
+};
+
+// Get User Info (Admin)
+export const getUserInfoByAdmin = async (userId) => {
+  try {
+    const response = await adminInstance.get(`/get-user-info/${userId}`);
+    return response;
+  } catch (error) {
+    console.error("Admin: Error fetching user info:", error);
+    throw error;
+  }
+};
+
+// Save Personal Info (Admin)
+export const savePersonalInfoByAdmin = async (formData, userId) => {
+  try {
+    const response = await adminInstance.post(
+      `/complete-profile-data/${userId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Admin: Error saving personal info:", error);
+    throw error;
+  }
+};
