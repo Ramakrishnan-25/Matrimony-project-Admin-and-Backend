@@ -26,7 +26,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://agape-vows-matrimony-final.vercel.app",
-  "https://agape-vows-matrimony-final-2v1i.vercel.app"
+  "https://agape-vows-matrimony-final-2v1i.vercel.app",
+  "https://matrimony-project-client.vercel.app"
 
  
 ];
