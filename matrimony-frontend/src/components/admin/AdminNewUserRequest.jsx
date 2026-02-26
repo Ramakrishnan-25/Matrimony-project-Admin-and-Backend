@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import img1 from "/assets/images/profiles/1.jpg";
+//import img1 from "/assets/images/profiles/1.jpg";
 import NewLayout from "./layout/NewLayout";
 import {
   approveNewUser,
   getNewRequestedUsers,
+    deleteUserById, 
 } from "../../api/service/adminServices";
-
+import { useNavigate } from "react-router-dom";
 export default function AdminNewUserRequest() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -135,7 +137,28 @@ export default function AdminNewUserRequest() {
       });
     }
   };
+const handleDeleteUser = async (userId) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this user? This action cannot be undone."
+  );
 
+  if (!confirmDelete) return;
+
+  try {
+    // Call your API to delete the user
+    const response = await deleteUserById(userId); // <-- you need to create this API in adminServices
+
+    if (response.status === 200) {
+      // Remove the user from the state to update the table
+      setFilteredUsers((prev) => prev.filter((user) => user._id !== userId));
+      setUsers((prev) => prev.filter((user) => user._id !== userId));
+      alert(response.data.message || "User deleted successfully!");
+    }
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    alert("Failed to delete user. Please try again.");
+  }
+};
   // Pagination component
   const Pagination = () => {
     const pageNumbers = [];
@@ -307,7 +330,7 @@ export default function AdminNewUserRequest() {
     },
     th: {
       padding: "12px 15px",
-      textAlign: "left",
+      textAlign: "center",
       fontWeight: "600",
       color: "#495057",
       fontSize: "13px",
@@ -320,44 +343,51 @@ export default function AdminNewUserRequest() {
       color: "#212529",
       fontSize: "14px",
       fontWeight: "400",
+      textAlign: "center",
     },
     profileCell: {
       display: "flex",
       alignItems: "center",
-      gap: "12px",
+      gap: "15px",
+      textAlign: "left",
     },
+
     profileImage: {
-      width: "40px",
-      height: "40px",
+      width: "45px",
+      height: "45px",
       borderRadius: "50%",
       objectFit: "cover",
       border: "2px solid #e9ecef",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
     },
+
     profileInfo: {
       display: "flex",
       flexDirection: "column",
-      gap: "3px",
+      justifyContent: "center",
+      gap: "4px",
     },
+
     profileName: {
       fontWeight: "600",
       color: "#212529",
-      fontSize: "14px",
+      fontSize: "15px",
       margin: "0",
-      lineHeight: "1.2",
     },
+
     profileEmail: {
       color: "#6c757d",
-      fontSize: "12px",
+      fontSize: "13px",
       margin: "0",
-      lineHeight: "1.2",
     },
+
     profileMobile: {
       color: "#495057",
-      fontSize: "12px",
+      fontSize: "13px",
       margin: "0",
-      lineHeight: "1.2",
       fontWeight: "500",
     },
+
     dateTimeContainer: {
       display: "flex",
       flexDirection: "column",
@@ -589,14 +619,40 @@ export default function AdminNewUserRequest() {
                             <td style={tableStyles.td}>{serialNumber}</td>
                             <td style={tableStyles.td}>
                               <div style={tableStyles.profileCell}>
-                                <img
+                                {/* <img
                                   src={user.profileImage || img1}
                                   alt={user.userName}
                                   style={tableStyles.profileImage}
                                   onError={(e) => {
                                     e.target.src = img1;
                                   }}
-                                />
+                                /> */}
+
+                                {user.profileImage ? (
+                                  <img
+                                    src={user.profileImage}
+                                    alt={user.userName}
+                                    style={tableStyles.profileImage}
+                                  />
+                                ) : (
+                                  <div
+                                    style={{
+                                      ...tableStyles.profileImage,
+                                      backgroundColor: "#f0f0f0",
+                                      boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <i
+                                      className="fa fa-user"
+                                      style={{ color: "#bbb", fontSize: "16px" }}
+                                    ></i>
+                                  </div>
+
+                                )}
+
                                 <div style={tableStyles.profileInfo}>
                                   <h5 style={tableStyles.profileName}>
                                     {user.userName}
@@ -605,8 +661,11 @@ export default function AdminNewUserRequest() {
                                     {user.userEmail}
                                   </p>
                                   <p style={tableStyles.profileMobile}>
-                                    {user.userMobile}
+                                    {user.userMobile
+                                      ? `+91-${user.userMobile.replace(/^91/, "")}`
+                                      : ""}
                                   </p>
+
                                 </div>
                               </div>
                             </td>
@@ -639,8 +698,8 @@ export default function AdminNewUserRequest() {
                                   ...(paymentInfo.status === "Paid"
                                     ? tableStyles.paidStatus
                                     : paymentInfo.status === "Pending"
-                                    ? tableStyles.pendingStatus
-                                    : tableStyles.unpaidStatus),
+                                      ? tableStyles.pendingStatus
+                                      : tableStyles.unpaidStatus),
                                 }}
                               >
                                 {paymentInfo.status}
@@ -716,11 +775,14 @@ export default function AdminNewUserRequest() {
                                       Edit
                                     </a>
                                   </li>
-                                  <li>
-                                    <a className="dropdown-item" href="#">
-                                      Delete
-                                    </a>
-                                  </li>
+                                 <li>
+  <a
+    className="dropdown-item"
+    onClick={() => handleDeleteUser(user._id)}
+  >
+    Delete
+  </a>
+</li>
                                   <li>
                                     <a className="dropdown-item" href="#">
                                       Billing info
@@ -731,11 +793,12 @@ export default function AdminNewUserRequest() {
                                       View more details
                                     </a>
                                   </li>
-                                  <li>
-                                    <a className="dropdown-item" href="#">
-                                      View profile
-                                    </a>
-                                  </li>
+                                  <a
+                                    className="dropdown-item"
+                                    onClick={() => navigate(`/admin/new-user/${user._id}`)}
+                                  >
+                                    View profile
+                                  </a>
                                 </ul>
                               </div>
                             </td>

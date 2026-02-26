@@ -18,7 +18,7 @@ import AdminEvents from "./components/admin/AdminEvents";
 import AdminLayout from "./components/mainLayouts/AdminLayout";
 import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminDeletedUsers from "./components/admin/AdminDeletedUsers";
-
+import AdminViewNewUser from "./components/admin/AdminViewNewUser";
 function App() {
   return (
     <Router>
@@ -170,6 +170,14 @@ function App() {
             </AdminLayout>
           }
         />
+        <Route
+  path="/admin/new-user/:id"
+  element={
+    <AdminLayout>
+      <AdminViewNewUser />
+    </AdminLayout>
+  }
+/>
       </Routes>
     </Router>
   );
