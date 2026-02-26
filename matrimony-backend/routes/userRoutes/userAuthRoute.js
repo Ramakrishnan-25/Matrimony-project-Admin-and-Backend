@@ -32,10 +32,9 @@ userAuthRoutes.get("/send-my-individual-chat-list/:chatId", userChatController.g
 // );
 
 userAuthRoutes.get(
-  "/download-invoice/:userId/:subscriptionTransactionId", // rename param
+  "/download-invoice/:userId/:transactionId",
   userAuthController.downloadInvoice
 );
-
 
 
 

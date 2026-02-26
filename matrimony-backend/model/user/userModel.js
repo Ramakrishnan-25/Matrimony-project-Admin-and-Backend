@@ -212,7 +212,10 @@ const userSchema = new mongoose.Schema(
 
     subscriptionTransactionDate: Date,
     subscriptionTransactionId: String,
-    subscriptionOrderId: String,
+    subscriptionOrderId: {
+  type: String,
+  required: true,
+},
     isEmployeeAssisted: { type: Boolean, default: false },
     assistedEmployeeId: String,
     assistedEmployeeName: String,

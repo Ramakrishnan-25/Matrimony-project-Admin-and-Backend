@@ -62,12 +62,16 @@
 
 // module.exports = mongoose.model("planPayment", paymentSchema);
 
-
 const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema(
   {
-    orderId: { type: String },
+    // 🔥 ORDER ID (IMPORTANT)
+    orderId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
 
     razorpayPaymentId: {
       type: String,
@@ -123,18 +127,12 @@ const paymentSchema = new mongoose.Schema(
       default: "Active",
     },
 
-    // ✅ IMPORTANT CHANGE
+    // ✅ PLAN DETAILS
     planDetails: {
       name: String,
       price: Number,
-
-      // ❌ OLD (remove dependency)
-      // priceType: String,
-
-      // ✅ NEW (USE THIS)
-      duration: Number, // 1, 3, 6
-      durationType: String, // days / months / years
-
+      duration: Number,
+      durationType: String,
       maxProfiles: Number,
       profilesType: String,
       canViewProfiles: String,

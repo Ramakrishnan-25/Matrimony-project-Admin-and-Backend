@@ -15,6 +15,8 @@ const paymentModel = require("../../model/user/planBookings");
 const shortListedSchema = require("../../model/user/shortListedProfile");
 const Event = require("../../model/admin/eventModel")
 const fs = require("fs");
+const puppeteer = require("puppeteer");
+
 
 cloudinary.config({
   cloud_name: CLOUDINARY_CLOUD_NAME,
@@ -992,9 +994,16 @@ const getMyActivePlanDetails = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    // ✅ Get user + required fields
     const userData = await userModel.findOne(
       { _id: userId },
-      { paymentDetails: 1 }
+      {
+        paymentDetails: 1,
+        userName: 1,
+        userEmail: 1,
+        userMobile: 1,
+        agwid: 1,
+      }
     );
 
     if (!userData || !userData.paymentDetails?.length) {
@@ -1004,7 +1013,7 @@ const getMyActivePlanDetails = async (req, res) => {
       });
     }
 
-    // ✅ ONLY ACTIVE
+    // ✅ Filter only ACTIVE plans
     const activePlans = userData.paymentDetails.filter(
       (plan) => plan.subscriptionStatus === "Active"
     );
@@ -1016,7 +1025,7 @@ const getMyActivePlanDetails = async (req, res) => {
       });
     }
 
-    // ✅ LATEST PLAN
+    // ✅ Sort latest plan
     activePlans.sort(
       (a, b) =>
         new Date(b.subscriptionValidFrom) -
@@ -1025,11 +1034,13 @@ const getMyActivePlanDetails = async (req, res) => {
 
     const latestPlan = activePlans[0];
 
+    // ✅ Format date
     const formatDate = (date) =>
       new Date(date).toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
       });
 
+    // ✅ FINAL RESPONSE (🔥 USER + PLAN)
     return res.status(200).json({
       success: true,
       activePlan: {
@@ -1041,17 +1052,25 @@ const getMyActivePlanDetails = async (req, res) => {
         subscriptionValidTo: formatDate(
           latestPlan.subscriptionValidTo
         ),
+        
+         subscriptionTransactionId: latestPlan.subscriptionTransactionId,
+
+        // 🔥 USER DETAILS ADDED
+        userName: userData.userName,
+        userEmail: userData.userEmail,
+        userMobile: userData.userMobile,
+        agwid: userData.agwid,
+         orderId: userData.orderId,
       },
     });
   } catch (err) {
-    console.log(err);
+    console.log("Error in getMyActivePlanDetails:", err);
     return res.status(500).json({
       success: false,
       message: "Internal error",
     });
   }
 };
-
 
 const shortListTheProfile = async (req, res) => {
   try {
@@ -1320,88 +1339,6 @@ const calculateValidTo = (validFrom, duration, durationType) => {
 
 
 
-const downloadInvoice = async (req, res) => {
-  try {
-    const { userId, subscriptionTransactionId } = req.params;
-
-    const user = await userModel.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const payment = user.paymentDetails.find(
-      (p) => p.subscriptionTransactionId === subscriptionTransactionId
-    );
-
-    if (!payment) {
-      return res.status(404).json({ success: false, message: "Invoice not found" });
-    }
-
-    // ✅ Create PDF
-    const doc = new PDFDocument({ margin: 50 });
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=invoice-${subscriptionTransactionId}.pdf`
-    );
-
-    doc.pipe(res);
-
-    // ==== HEADER ====
-    doc
-      .fontSize(26)
-      .fillColor("#333")
-      .text("AGPW Matrimony", { align: "center" });
-
-    doc
-      .fontSize(16)
-      .fillColor("#555")
-      .text("Invoice", { align: "center" });
-
-    doc.moveDown(2);
-
-    // ==== USER DETAILS ====
-    doc.fontSize(12).fillColor("#000");
-    doc.text(`Name: ${user.userName}`);
-    doc.text(`Email: ${user.userEmail || "Not provided"}`);
-    doc.text(`Phone: ${user.userMobile || "Not provided"}`);
-    doc.moveDown();
-
-    // ==== PAYMENT DETAILS ====
-    doc.fontSize(14).fillColor("#333").text("Payment Details", { underline: true });
-    doc.moveDown(0.5);
-
-    doc.fontSize(12);
-    doc.text(`Plan: ${payment.subscriptionType}`);
-    doc.text(`Amount Paid: ₹${payment.subscriptionAmount.toLocaleString("en-IN")}`);
-    doc.text(`Payment Status: ${payment.subscriptionStatus}`);
-    doc.text(`Transaction ID: ${payment.subscriptionTransactionId}`);
-    doc.text(`Order ID: ${payment.subscriptionOrderId}`);
-    doc.moveDown();
-
-    // ==== SUBSCRIPTION VALIDITY ====
-    doc.fontSize(14).fillColor("#333").text("Subscription Validity", { underline: true });
-    doc.moveDown(0.5);
-
-    doc.fontSize(12);
-    doc.text(`Valid From: ${new Date(payment.subscriptionValidFrom).toLocaleDateString("en-IN")}`);
-    doc.text(`Valid To: ${new Date(payment.subscriptionValidTo).toLocaleDateString("en-IN")}`);
-    doc.moveDown(2);
-
-    // ==== FOOTER ====
-    doc.fontSize(10).fillColor("#888");
-    doc.text("Thank you for choosing AGPW Matrimony!", { align: "center" });
-    doc.text("www.agpwmatrimony.com", { align: "center" });
-
-    doc.end();
-  } catch (error) {
-    console.error("Invoice error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
 
 const cancelUserPlan = async (req, res) => {
   try {
@@ -1480,6 +1417,194 @@ const cancelUserPlan = async (req, res) => {
 
 
 
+// const downloadInvoice = async (req, res) => {
+//   try {
+//     const { userId, transactionId } = req.params;
+
+//     const user = await userModel.findById(userId);
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     const payment = user.paymentDetails.find(
+//       (p) => p.subscriptionTransactionId === transactionId
+//     );
+
+//     if (!payment) {
+//       return res.status(404).json({ message: "Payment not found" });
+//     }
+
+//     // ✅ CREATE PDF
+//     const doc = new PDFDocument({ size: "A4", margin: 50 });
+
+//     // ✅ HEADERS (VERY IMPORTANT)
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader(
+//       "Content-Disposition",
+//       `attachment; filename=invoice-${transactionId}.pdf`
+//     );
+
+//     // ✅ PIPE DIRECTLY
+//     doc.pipe(res);
+
+//     // ✅ CONTENT
+//     doc.fontSize(20).text("INVOICE", { align: "center" });
+//     doc.moveDown();
+//     doc.text(`Order ID: ${payment.subscriptionOrderId}`);
+//     doc.fontSize(12).text(`Name: ${user.userName}`);
+//     doc.text(`Email: ${user.userEmail}`);
+//     doc.text(`Mobile: ${user.userMobile}`);
+//     doc.text(`AGW ID: ${user.agwid}`);
+
+//     doc.moveDown();
+
+//     doc.text(`Plan: ${payment.subscriptionType}`);
+//     doc.text(`Amount: ₹${payment.subscriptionAmount}`);
+
+//     doc.text(`From: ${new Date(payment.subscriptionValidFrom).toLocaleString("en-IN")}`);
+//     doc.text(`To: ${new Date(payment.subscriptionValidTo).toLocaleString("en-IN")}`);
+
+//     doc.text(`Transaction ID: ${payment.subscriptionTransactionId}`);
+
+//     // ✅ VERY VERY IMPORTANT
+//     doc.end();
+
+//   } catch (err) {
+//     console.error("PDF ERROR:", err);
+//     res.status(500).json({ message: "PDF generation failed" });
+//   }
+// };
+
+
+const downloadInvoice = async (req, res) => {
+  try {
+    const { userId, transactionId } = req.params;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const payment = user.paymentDetails.find(
+      (p) => p.subscriptionTransactionId === transactionId
+    );
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=invoice-${transactionId}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // ================= HEADER =================
+    doc.rect(0, 0, doc.page.width, 90).fill("#6A1B9A");
+
+    doc.fillColor("#fff")
+      .fontSize(20)
+      .text("AGAPE VOWS MATRIMONY", 0, 35, { align: "center" });
+
+    doc.moveDown(3);
+    doc.fillColor("#000");
+
+    // ================= TITLE =================
+    doc.fontSize(16)
+      .font("Helvetica-Bold")
+      .text("INVOICE", { align: "right" });
+
+    doc.fontSize(10)
+      .font("Helvetica")
+      .text(`Order ID: ${payment.subscriptionOrderId}`, { align: "right" });
+
+    doc.moveDown(1.5);
+
+    // ================= CUSTOMER BOX =================
+    const boxY = doc.y;
+
+    doc.roundedRect(40, boxY, 515, 90, 8).stroke("#ccc");
+
+    doc.fontSize(11);
+    doc.text(`Name: ${user.userName}`, 55, boxY + 10);
+    doc.text(`Email: ${user.userEmail}`, 55, boxY + 28);
+    doc.text(`Mobile: ${user.userMobile}`, 55, boxY + 46);
+    doc.text(`AGW ID: ${user.agwid}`, 55, boxY + 64);
+
+    doc.moveDown(5);
+
+    // ================= PLAN DETAILS =================
+    const planY = doc.y;
+
+    // Header
+    doc.rect(40, planY, 515, 25).fill("#EDE7F6");
+
+    doc.fillColor("#000")
+      .font("Helvetica-Bold")
+      .text("Plan Details", 50, planY + 7);
+
+    doc.moveDown(2);
+
+    doc.font("Helvetica");
+
+    // Plan content
+    doc.text(`Plan: ${payment.subscriptionType}`);
+    doc.text(`Amount: ₹${payment.subscriptionAmount}`);
+    doc.text(
+      `Valid From: ${new Date(payment.subscriptionValidFrom).toLocaleString("en-IN")}`
+    );
+    doc.text(
+      `Valid To: ${new Date(payment.subscriptionValidTo).toLocaleString("en-IN")}`
+    );
+
+    // ✅ Transaction ID moved INSIDE plan section
+    doc.text(`Transaction ID: ${payment.subscriptionTransactionId}`);
+
+    doc.moveDown(1.5);
+
+    // ================= AMOUNT BOX =================
+    const amtY = doc.y;
+
+    doc.roundedRect(40, amtY, 515, 35, 8).fill("#F3E5F5");
+
+    doc.fillColor("#4A148C")
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text(
+        `Total Paid: ₹${payment.subscriptionAmount}`,
+        50,
+        amtY + 10
+      );
+
+    doc.moveDown(3);
+
+    // ================= FOOTER (FIXED BOTTOM) =================
+    doc.fontSize(10)
+      .fillColor("gray")
+      // .text(
+      //   "Thank you for choosing Agape Vows Matrimony. We wish you a happy married life ❤️",
+      //   40,
+      //   doc.page.height - 50,
+      //   {
+      //     width: doc.page.width - 80,
+      //     align: "center",
+      //   }
+      // );
+
+    doc.end();
+
+  } catch (err) {
+    console.error("PDF ERROR:", err);
+    res.status(500).json({ message: "PDF generation failed" });
+  }
+};
+
+
 module.exports = {
   getAllEvents,
   getShortListedProfileData,
@@ -1502,5 +1627,5 @@ module.exports = {
   deleteAdditionalImages,
   savePaymentAndActivatePlan,
   // cancelUserPlan,
-  downloadInvoice
+  downloadInvoice,
 };
