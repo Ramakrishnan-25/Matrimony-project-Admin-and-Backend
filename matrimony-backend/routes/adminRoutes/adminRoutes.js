@@ -48,6 +48,7 @@ const adminRoutes = express.Router();
 const adminController = require("../../controller/adminController/adminController");
 const planController = require("../../controller/adminController/planController");
 const eventController = require("../../controller/adminController/eventController");
+const blogController = require("../../controller/adminController/blogController");
 
 const upload = require("../../middleware/multer");
 
@@ -109,4 +110,49 @@ adminRoutes.put(
 );
 adminRoutes.delete("/delete-event/:id", eventController.deleteEvent);
 
+/* =========================
+   BLOG MANAGEMENT
+========================== */
+
+// Get All Blogs
+adminRoutes.get("/get-all-blogs", blogController.getAllBlogs);
+
+// // Add New Blog
+// adminRoutes.post(
+//   "/add-new-blog",
+//   upload.single("image"),
+//   blogController.addNewBlog
+// );
+
+// // Edit Blog
+// adminRoutes.put(
+//   "/edit-blog/:id",
+//   upload.single("image"),
+//   blogController.editBlog
+// );
+
+// Delete Blog
+adminRoutes.delete(
+  "/delete-blog/:id",
+  blogController.deleteBlog
+);
+
 module.exports = adminRoutes;
+
+adminRoutes.post(
+  "/add-new-blog",
+  upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "authorPhoto", maxCount: 1 },
+  ]),
+  blogController.addNewBlog
+);
+
+adminRoutes.put(
+  "/edit-blog/:id",
+  upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "authorPhoto", maxCount: 1 },
+  ]),
+  blogController.editBlog
+);

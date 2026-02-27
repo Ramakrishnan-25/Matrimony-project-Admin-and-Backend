@@ -239,6 +239,10 @@ deletedAt: {
       ========================== */
       profileImage: { type: String },
       additionalImages: [{ type: String }],
+     selfIntroductionVideo: {
+    type: String,
+    default: "",
+  },
       profileViews: [{ type: String }],
    },
    { timestamps: true }

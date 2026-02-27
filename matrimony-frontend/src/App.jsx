@@ -19,6 +19,11 @@ import AdminLayout from "./components/mainLayouts/AdminLayout";
 import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminDeletedUsers from "./components/admin/AdminDeletedUsers";
 import AdminViewNewUser from "./components/admin/AdminViewNewUser";
+
+
+import AdminBlogs from "./components/admin/AdminBlogs";
+
+
 function App() {
   return (
     <Router>
@@ -175,6 +180,14 @@ function App() {
   element={
     <AdminLayout>
       <AdminViewNewUser />
+    </AdminLayout>
+  }
+/>
+<Route
+  path="/admin/blogs"
+  element={
+    <AdminLayout>
+      <AdminBlogs />
     </AdminLayout>
   }
 />

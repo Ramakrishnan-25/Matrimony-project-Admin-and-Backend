@@ -14,6 +14,9 @@ const planModel = require("../../model/admin/planModel");
 const paymentModel = require("../../model/user/planBookings");
 const shortListedSchema = require("../../model/user/shortListedProfile");
 const Event = require("../../model/admin/eventModel")
+const Blog = require("../../model/admin/blogModel")
+
+
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 
@@ -24,10 +27,20 @@ cloudinary.config({
   api_secret: CLOUDINARY_API_SECRET,
 });
 
+
+
+
+
 const generateOrderId = () => {
   const randomNumber = Math.floor(100000 + Math.random() * 900000);
-  return `AGPW${randomNumber}`;
+  return `AGV${randomNumber}`;
 };
+
+
+// const generateOrderId = () => {
+//   const randomNumber = Math.floor(100000 + Math.random() * 900000);
+//   return `AGV${randomNumber}`; // ✅ changed from AGPW to AGV
+// };
 
 
 
@@ -301,6 +314,26 @@ const completeProfileData = async (req, res) => {
       updates.additionalImages = additionalImages;
     }
 
+       /* =========================
+       SELF INTRODUCTION VIDEO
+    ========================== */
+    if (files?.selfIntroductionVideo?.[0]) {
+      const videoUpload = await cloudinary.uploader.upload(
+        files.selfIntroductionVideo[0].path,
+        {
+          resource_type: "video",
+          folder: `matrimony/users/${userId}/selfIntroductionVideo`,
+        }
+      );
+      updates.selfIntroductionVideo = videoUpload.secure_url;
+      fs.unlinkSync(files.selfIntroductionVideo[0].path);
+    } else if (req.body.deleteSelfIntroductionVideo === "true") {
+      updates.selfIntroductionVideo = "";
+    }
+
+    /* =========================
+       FINAL UPDATE
+    ========================== */
     console.log("🔄 Final Updates:", updates);
 
     const updatedUser = await userModel.findByIdAndUpdate(userId, updates, {
@@ -320,7 +353,6 @@ const completeProfileData = async (req, res) => {
     });
   }
 };
-
 
 const getUserProfileImage = async (req, res) => {
   try {
@@ -772,13 +804,14 @@ const getNewProfileMatches = async (req, res) => {
       const dob = new Date(user.dateOfBirth);
       const age = new Date().getFullYear() - dob.getFullYear();
 
-      return {
-        _id: user._id,
-        userName: user.userName,
-        profileImage: user.profileImage,
-        city: user.city,
-        age,
-      };
+     return {
+  _id: user._id,
+  agwid: user.agwid, // ✅ ADD THIS
+  userName: user.userName,
+  profileImage: user.profileImage,
+  city: user.city,
+  age,
+};
     });
 
     res.status(200).json({ matches });
@@ -1603,6 +1636,27 @@ const downloadInvoice = async (req, res) => {
     res.status(500).json({ message: "PDF generation failed" });
   }
 };
+// ===============================
+// GET ALL PUBLISHED BLOGS - CLIENT SIDE
+// ===============================
+const getAllBlogs = async (req, res) => {
+  try {
+    const blogs = await Blog.find({ status: "Published" }) // optional filter
+      .sort({ isPinned: -1, createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Blogs fetched successfully",
+      data: blogs,
+    });
+  } catch (error) {
+    console.error("Error fetching blogs:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch blogs",
+    });
+  }
+};
 
 
 module.exports = {
@@ -1628,4 +1682,6 @@ module.exports = {
   savePaymentAndActivatePlan,
   // cancelUserPlan,
   downloadInvoice,
+  getAllEvents,
+  getAllBlogs,
 };

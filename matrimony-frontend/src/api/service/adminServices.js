@@ -249,3 +249,35 @@ export const savePersonalInfoByAdmin = async (formData, userId) => {
   }
 };
 
+/* =========================
+   BLOG MANAGEMENT
+========================== */
+
+// Get All Blogs
+export const getAllBlogs = async () => {
+  return await adminInstance.get(`/get-all-blogs`);
+};
+
+// Add New Blog
+export const addNewBlog = async (blogData) => {
+  // blogData must be FormData (image upload irundha)
+  return await adminInstance.post(`/add-new-blog`, blogData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+// Edit Blog
+export const editBlog = async (blogId, blogData) => {
+  return await adminInstance.put(`/edit-blog/${blogId}`, blogData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+// Delete Blog
+export const deleteBlog = async (blogId) => {
+  return await adminInstance.delete(`/delete-blog/${blogId}`);
+};
