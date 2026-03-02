@@ -3,6 +3,42 @@ const nodemailer = require("nodemailer");
 
 const userModel = require("../../model/user/userModel");
 
+// const generateAgwid = async () => {
+//   try {
+//     let isUnique = false;
+//     let agwid = "";
+//     let attempts = 0;
+
+//     while (!isUnique && attempts < 20) {
+//       attempts++;
+//       // Determine number of digits: start with 6, switch to 7 if we have too many collisions
+//       const digits = attempts > 10 ? 7 : 6;
+
+//       // Generate random number
+//       const max = Math.pow(10, digits);
+//       const randomNumber = Math.floor(Math.random() * max);
+//       const paddedNumber = randomNumber.toString().padStart(digits, "0");
+
+//       agwid = `AGPW${paddedNumber}`;
+
+//       const existingUser = await userModel.findOne({ agwid });
+//       if (!existingUser) {
+//         isUnique = true;
+//       }
+//     }
+
+//     if (!isUnique) {
+//       throw new Error("Failed to generate unique AGW ID after multiple attempts");
+//     }
+
+//     return agwid;
+//   } catch (error) {
+//     console.error("Error generating AGW ID:", error);
+//     throw error;
+//   }
+// };
+
+
 const generateAgwid = async () => {
   try {
     let isUnique = false;
@@ -11,15 +47,12 @@ const generateAgwid = async () => {
 
     while (!isUnique && attempts < 20) {
       attempts++;
-      // Determine number of digits: start with 6, switch to 7 if we have too many collisions
-      const digits = attempts > 10 ? 7 : 6;
 
-      // Generate random number
-      const max = Math.pow(10, digits);
-      const randomNumber = Math.floor(Math.random() * max);
-      const paddedNumber = randomNumber.toString().padStart(digits, "0");
+      // Always 6 digits
+      const randomNumber = Math.floor(Math.random() * 1000000);
+      const paddedNumber = randomNumber.toString().padStart(6, "0");
 
-      agwid = `AGPW${paddedNumber}`;
+      agwid = `AGV${paddedNumber}`;
 
       const existingUser = await userModel.findOne({ agwid });
       if (!existingUser) {
@@ -28,7 +61,7 @@ const generateAgwid = async () => {
     }
 
     if (!isUnique) {
-      throw new Error("Failed to generate unique AGW ID after multiple attempts");
+      throw new Error("Failed to generate unique AGW ID");
     }
 
     return agwid;
@@ -37,6 +70,8 @@ const generateAgwid = async () => {
     throw error;
   }
 };
+
+
 
 const saveSignUpData = async (req, res) => {
   try {

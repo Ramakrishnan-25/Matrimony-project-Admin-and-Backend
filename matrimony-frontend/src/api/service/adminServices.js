@@ -281,3 +281,22 @@ export const editBlog = async (blogId, blogData) => {
 export const deleteBlog = async (blogId) => {
   return await adminInstance.delete(`/delete-blog/${blogId}`);
 };
+
+
+/* =========================
+   ISSUE MANAGEMENT
+========================== */
+
+// Get All Issues
+export const getAllIssues = async () => {
+  return await adminInstance.get(`/get-all-issues`);
+};
+
+// Update Issue (status + reply)
+export const updateIssue = async (issueId, data) => {
+  return await adminInstance.put(`/update-issue/${issueId}`, data);
+};
+
+export const deleteIssue = (id) => {
+  return adminInstance.delete(`/delete-issue/${id}`);
+};

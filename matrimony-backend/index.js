@@ -3,6 +3,7 @@ const { PORT } = require("./config/variables/variables");
 const app = express();
 const cors = require("cors");
 const http = require("http");
+const path = require("path"); // ✅ ADD THIS
 
 const dbConnect = require("./config/database/dbConnect");
 const signUpRoute = require("./routes/userRoutes/userSignUpRoute");
@@ -20,6 +21,8 @@ app.set("trust proxy", true);
 dbConnect();
 
 app.use(express.json());
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const allowedOrigins = [
   "http://localhost:5173",

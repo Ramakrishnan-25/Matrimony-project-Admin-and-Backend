@@ -19,7 +19,7 @@ import AdminLayout from "./components/mainLayouts/AdminLayout";
 import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminDeletedUsers from "./components/admin/AdminDeletedUsers";
 import AdminViewNewUser from "./components/admin/AdminViewNewUser";
-
+import AdminIssues from "./components/admin/AdminIssues";
 
 import AdminBlogs from "./components/admin/AdminBlogs";
 
@@ -175,6 +175,14 @@ function App() {
             </AdminLayout>
           }
         />
+        <Route
+  path="/admin/issues"
+  element={
+    <AdminLayout>
+      <AdminIssues />
+    </AdminLayout>
+  }
+/>
         <Route
   path="/admin/new-user/:id"
   element={

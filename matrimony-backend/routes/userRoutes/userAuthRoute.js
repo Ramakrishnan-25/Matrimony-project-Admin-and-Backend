@@ -82,14 +82,20 @@ const storage = multer.diskStorage({
 
 // File filter for images and video
 const fileFilter = (req, file, cb) => {
-  const videoTypes = [".mp4", ".mov", ".avi"];
-  const imageTypes = [".jpg", ".jpeg", ".png", ".webp"];
-  const ext = file.originalname.slice(file.originalname.lastIndexOf(".")).toLowerCase();
+  const allowedTypes = [
+    ".jpg", ".jpeg", ".png", ".webp",   // images
+    ".mp4", ".mov", ".avi",             // videos
+    ".pdf", ".doc", ".docx", ".txt"     // documents ✅ NEW
+  ];
 
-  if (videoTypes.includes(ext) || imageTypes.includes(ext)) {
+  const ext = file.originalname
+    .slice(file.originalname.lastIndexOf("."))
+    .toLowerCase();
+
+  if (allowedTypes.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error("Only images and video files are allowed"));
+    cb(new Error("Only images, videos, and documents are allowed"));
   }
 };
 
@@ -148,7 +154,11 @@ userAuthRoutes.post("/short-list-the-profile/:userId", userAuthController.shortL
 // UPDATE Interest
 userAuthRoutes.put("/change-interest-status/:userId", userAuthController.changeInterestStatus);
 
-// UPDATE agwid to agvid
+userAuthRoutes.post(
+  "/report-issue",
+  upload.single("attachment"),
+  userAuthController.reportIssue
+);
 
 
 module.exports = userAuthRoutes;

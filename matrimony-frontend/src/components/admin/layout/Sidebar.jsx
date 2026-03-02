@@ -131,6 +131,9 @@ const Sidebar = () => {
                 <li>
                   <a href="/admin/deleted-users">Deleted Users</a>
                 </li>
+                 <li>
+                  <a href="/admin/issues">Issues</a>
+                </li>
               </ol>
             </div>
           </li>
@@ -149,6 +152,8 @@ const Sidebar = () => {
           <li className="ic-pri">
             <a href="/admin/blogs">Blogs</a>
           </li>
+
+           
 
         </ul>
       </div>

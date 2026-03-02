@@ -15,6 +15,7 @@ const paymentModel = require("../../model/user/planBookings");
 const shortListedSchema = require("../../model/user/shortListedProfile");
 const Event = require("../../model/admin/eventModel")
 const Blog = require("../../model/admin/blogModel")
+const Issue = require("../../model/user/issueModel");
 
 
 const fs = require("fs");
@@ -1450,66 +1451,6 @@ const cancelUserPlan = async (req, res) => {
 
 
 
-// const downloadInvoice = async (req, res) => {
-//   try {
-//     const { userId, transactionId } = req.params;
-
-//     const user = await userModel.findById(userId);
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     const payment = user.paymentDetails.find(
-//       (p) => p.subscriptionTransactionId === transactionId
-//     );
-
-//     if (!payment) {
-//       return res.status(404).json({ message: "Payment not found" });
-//     }
-
-//     // ✅ CREATE PDF
-//     const doc = new PDFDocument({ size: "A4", margin: 50 });
-
-//     // ✅ HEADERS (VERY IMPORTANT)
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename=invoice-${transactionId}.pdf`
-//     );
-
-//     // ✅ PIPE DIRECTLY
-//     doc.pipe(res);
-
-//     // ✅ CONTENT
-//     doc.fontSize(20).text("INVOICE", { align: "center" });
-//     doc.moveDown();
-//     doc.text(`Order ID: ${payment.subscriptionOrderId}`);
-//     doc.fontSize(12).text(`Name: ${user.userName}`);
-//     doc.text(`Email: ${user.userEmail}`);
-//     doc.text(`Mobile: ${user.userMobile}`);
-//     doc.text(`AGW ID: ${user.agwid}`);
-
-//     doc.moveDown();
-
-//     doc.text(`Plan: ${payment.subscriptionType}`);
-//     doc.text(`Amount: ₹${payment.subscriptionAmount}`);
-
-//     doc.text(`From: ${new Date(payment.subscriptionValidFrom).toLocaleString("en-IN")}`);
-//     doc.text(`To: ${new Date(payment.subscriptionValidTo).toLocaleString("en-IN")}`);
-
-//     doc.text(`Transaction ID: ${payment.subscriptionTransactionId}`);
-
-//     // ✅ VERY VERY IMPORTANT
-//     doc.end();
-
-//   } catch (err) {
-//     console.error("PDF ERROR:", err);
-//     res.status(500).json({ message: "PDF generation failed" });
-//   }
-// };
-
-
 const downloadInvoice = async (req, res) => {
   try {
     const { userId, transactionId } = req.params;
@@ -1657,6 +1598,57 @@ const getAllBlogs = async (req, res) => {
     });
   }
 };
+const reportIssue = async (req, res) => {
+  try {
+    console.log("📥 Incoming Issue:", req.body);
+    console.log("📁 Uploaded File:", req.file); // ✅ debug
+
+    const {
+      userId,
+      userName,
+      userEmail,
+      userMobile,
+      agwid,
+      details,
+    } = req.body;
+
+    // ✅ GET FILE PATH FROM MULTER
+    const attachment = req.file
+      ? req.file.path.replace(/\\/g, "/") // 🔥 Windows fix
+      : "";
+
+    // ✅ Validation
+    if (!details) {
+      return res.status(400).json({
+        success: false,
+        message: "Issue details are required",
+      });
+    }
+
+    const newIssue = new Issue({
+      userId,
+      userName,
+      userEmail,
+      userMobile,
+      agwid,
+      details,
+      attachment, // ✅ correct
+    });
+
+    await newIssue.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Issue submitted successfully",
+    });
+  } catch (error) {
+    console.error("❌ reportIssue error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 
 module.exports = {
@@ -1684,4 +1676,5 @@ module.exports = {
   downloadInvoice,
   getAllEvents,
   getAllBlogs,
+  reportIssue
 };

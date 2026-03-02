@@ -691,6 +691,8 @@ const getDeletedUsers = async (req, res) => {
 };
 
 
+
+
 module.exports = {
   getPaidUsersData,
   approveNewUser,
@@ -703,6 +705,7 @@ module.exports = {
   restoreUser,
   updateUser,
   getDeletedUsers,
+  
 
 };
   
