@@ -583,6 +583,11 @@ const showUserInterests = async (req, res) => {
 
     const { targetUser, permissions, message } = interestData;
 
+    console.log("userId", userId);    
+    console.log("targetUser", targetUser);   
+     console.log("permissions", permissions);    
+     console.log("message", message);
+
     // Check if any interest already exists between the two users
     const existingInterest = await interestModel.findOne({
       senderId: userId,
@@ -1028,19 +1033,23 @@ const getMyActivePlanDetails = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // ✅ Get user + required fields
-    const userData = await userModel.findOne(
-      { _id: userId },
-      {
-        paymentDetails: 1,
-        userName: 1,
-        userEmail: 1,
-        userMobile: 1,
-        agwid: 1,
-      }
-    );
+    // ✅ Fetch user and only required fields
+    const userData = await userModel.findById(userId, {
+      paymentDetails: 1,
+      userName: 1,
+      userEmail: 1,
+      userMobile: 1,
+      agwid: 1,
+    });
 
-    if (!userData || !userData.paymentDetails?.length) {
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (!userData.paymentDetails || userData.paymentDetails.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No subscription found",
@@ -1052,56 +1061,48 @@ const getMyActivePlanDetails = async (req, res) => {
       (plan) => plan.subscriptionStatus === "Active"
     );
 
-    if (!activePlans.length) {
+    if (activePlans.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No active plan",
       });
     }
 
-    // ✅ Sort latest plan
+    // ✅ Sort by latest subscriptionValidFrom
     activePlans.sort(
       (a, b) =>
-        new Date(b.subscriptionValidFrom) -
-        new Date(a.subscriptionValidFrom)
+        new Date(b.subscriptionValidFrom) - new Date(a.subscriptionValidFrom)
     );
 
     const latestPlan = activePlans[0];
 
-    // ✅ Format date
+    // ✅ Format date helper
     const formatDate = (date) =>
-      new Date(date).toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-      });
+      new Date(date).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-    // ✅ FINAL RESPONSE (🔥 USER + PLAN)
+    // ✅ Prepare response
+    const response = {
+      subscriptionType: latestPlan.subscriptionType,
+      subscriptionAmount: latestPlan.subscriptionAmount,
+      subscriptionValidFrom: formatDate(latestPlan.subscriptionValidFrom),
+      subscriptionValidTo: formatDate(latestPlan.subscriptionValidTo),
+      subscriptionTransactionId: latestPlan.subscriptionTransactionId,
+      subscriptionOrderId: latestPlan.subscriptionOrderId, // ✅ FIXED
+      userName: userData.userName,
+      userEmail: userData.userEmail,
+      userMobile: userData.userMobile,
+      agwid: userData.agwid,
+    };
+
     return res.status(200).json({
       success: true,
-      activePlan: {
-        subscriptionType: latestPlan.subscriptionType,
-        subscriptionAmount: latestPlan.subscriptionAmount,
-        subscriptionValidFrom: formatDate(
-          latestPlan.subscriptionValidFrom
-        ),
-        subscriptionValidTo: formatDate(
-          latestPlan.subscriptionValidTo
-        ),
-        
-         subscriptionTransactionId: latestPlan.subscriptionTransactionId,
-
-        // 🔥 USER DETAILS ADDED
-        userName: userData.userName,
-        userEmail: userData.userEmail,
-        userMobile: userData.userMobile,
-        agwid: userData.agwid,
-         orderId: userData.orderId,
-      },
+      activePlan: response,
     });
   } catch (err) {
-    console.log("Error in getMyActivePlanDetails:", err);
+    console.error("Error in getMyActivePlanDetails:", err);
     return res.status(500).json({
       success: false,
-      message: "Internal error",
+      message: "Internal server error",
     });
   }
 };
