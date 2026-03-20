@@ -285,7 +285,7 @@ const completeProfileData = async (req, res) => {
        ADDITIONAL IMAGES
     ========================== */
     let additionalImages = [];
-    
+
     // Include existing images that weren't deleted
     if (req.body.existingAdditionalImages) {
       const existingImages = Array.isArray(req.body.existingAdditionalImages)
@@ -293,7 +293,7 @@ const completeProfileData = async (req, res) => {
         : [req.body.existingAdditionalImages];
       additionalImages = [...existingImages];
     }
-    
+
     // Add newly uploaded images
     if (files?.additionalImages?.length) {
       const uploadedImages = await Promise.all(
@@ -310,14 +310,14 @@ const completeProfileData = async (req, res) => {
       ];
       files.additionalImages.forEach((f) => fs.unlinkSync(f.path));
     }
-    
+
     if (additionalImages.length > 0) {
       updates.additionalImages = additionalImages;
     }
 
-       /* =========================
-       SELF INTRODUCTION VIDEO
-    ========================== */
+    /* =========================
+    SELF INTRODUCTION VIDEO
+ ========================== */
     if (files?.selfIntroductionVideo?.[0]) {
       const videoUpload = await cloudinary.uploader.upload(
         files.selfIntroductionVideo[0].path,
@@ -513,13 +513,174 @@ const getAllUserProfileDataHome = async (req, res) => {
   }
 };
 
+// const getProfileMoreInformation = async (req, res) => {
+//   try {
+//     const { profileId } = req.params;
+//     const { viewerId } = req.query; // Check for viewerId in query params
+
+//     const profileData = await userModel.findById(
+//       { _id: profileId },
+//       { userPassword: 0 }
+//     );
+
+//     if (!profileData) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Profile not found",
+//       });
+//     }
+
+//     // Logic to update view count (Unique Views) and check limitations
+//     if (viewerId && viewerId !== profileId) {
+//       if (!profileData.profileViews) {
+//         profileData.profileViews = [];
+//       }
+
+//       const viewerData = await userModel.findById(viewerId);
+//       if (viewerData && viewerData.paymentDetails) {
+//        const now = new Date();
+
+// const activePlans = viewerData.paymentDetails.filter(
+//   (p) =>
+//     p.subscriptionStatus === "Active" &&
+//     new Date(p.subscriptionValidTo) > now
+// );
+
+
+
+//         if (activePlans.length > 0) {
+//           activePlans.sort((a, b) => new Date(b.subscriptionValidFrom) - new Date(a.subscriptionValidFrom));
+//           const activePlan = activePlans[0];
+
+//           const planIdx = viewerData.paymentDetails.findIndex(p => p._id && p._id.toString() === activePlan._id.toString());
+//           if (planIdx !== -1) {
+//              const actualPlan = viewerData.paymentDetails[planIdx];
+
+//              const today = process.env.TZ ? new Date(new Date().toLocaleString("en-US", { timeZone: process.env.TZ })) : new Date();
+//              const todayString = today.toISOString().split("T")[0];
+
+//              let lastViewStr = actualPlan.lastViewDate ? new Date(actualPlan.lastViewDate).toISOString().split("T")[0] : "";
+//              if (lastViewStr !== todayString) {
+//                await userModel.updateOne(
+//                  { _id: viewerId, "paymentDetails._id": actualPlan._id },
+//                  {
+//                    $set: {
+//                      "paymentDetails.$.dailyViewedCount": 0,
+//                      "paymentDetails.$.lastViewDate": today
+//                    }
+//                  }
+//                );
+//                viewerData.paymentDetails[planIdx].dailyViewedCount = 0;
+//                viewerData.paymentDetails[planIdx].lastViewDate = today;
+//              }
+
+//              let maxP = actualPlan.maxProfiles;
+//              let dailyL = actualPlan.dailyLimit;
+
+//              // Retroactive fallback for older plan subscriptions
+//              if (maxP === undefined || dailyL === undefined) {
+//                 const planModel = require("../../model/admin/planModel");
+//                 const actualPlanDef = await planModel.findOne({ name: actualPlan.subscriptionType });
+//                 if (actualPlanDef) {
+//                    maxP = actualPlanDef.maxProfiles;
+//                    dailyL = actualPlanDef.dailyLimit;
+
+//                    viewerData.paymentDetails[planIdx].maxProfiles = maxP;
+//                    viewerData.paymentDetails[planIdx].dailyLimit = dailyL;
+//                 }
+//              }
+
+//              const isUnlimited = (val) => val === "Unlimited" || val === "unlimited" || parseInt(val) >= 999999;
+
+//              const parsedMaxProfiles = parseInt(maxP);
+//              const parsedDailyLimit = parseInt(dailyL);
+
+//              const currentProfileCount = viewerData.paymentDetails[planIdx].profilesViewedCount || 0;
+//              const currentDailyCount = viewerData.paymentDetails[planIdx].dailyViewedCount || 0;
+
+//              if (!isUnlimited(maxP) && !isNaN(parsedMaxProfiles) && currentProfileCount >= parsedMaxProfiles) {
+//                 return res.status(403).json({ success: false, message: "Your limit has been reached." });
+//              }
+//              if (!isUnlimited(dailyL) && !isNaN(parsedDailyLimit) && currentDailyCount >= parsedDailyLimit) {
+//                 return res.status(403).json({ success: false, message: "Your limit has been reached." });
+//              }
+
+//              console.log(`[Limit Tracking] Updating Database for Viewer: ${viewerId}, target plan: ${actualPlan._id}`);
+//              // Always increment metrics on every view
+//              const updateResult = await userModel.updateOne(
+//                { _id: viewerId, "paymentDetails._id": actualPlan._id },
+//                {
+//                  $inc: {
+//                    "paymentDetails.$.profilesViewedCount": 1,
+//                    "paymentDetails.$.dailyViewedCount": 1
+//                  }
+//                }
+//              );
+//              console.log(`[Limit Tracking] MongoDB Update Result: `, updateResult);
+
+//              if (!profileData.profileViews.includes(viewerId)) {
+//                 profileData.profileViews.push(viewerId);
+//                 await profileData.save();
+//              }
+//           }
+//         } else {
+//            if (!profileData.profileViews.includes(viewerId)) {
+//              profileData.profileViews.push(viewerId);
+//              await profileData.save();
+//            }
+//         }
+//       } else {
+//          if (!profileData.profileViews.includes(viewerId)) {
+//            profileData.profileViews.push(viewerId);
+//            await profileData.save();
+//          }
+//       }
+//     }
+
+//     // Check interest status
+//     let interestStatus = null;
+//     if (viewerId) {
+//       const interest = await interestModel.findOne({
+//         senderId: viewerId,
+//         targetUserId: profileId
+//       });
+//       if (interest) {
+//         interestStatus = interest.status;
+//       }
+//     }
+
+//     // Add interestStatus to the response data
+//     const responseData = {
+//       ...profileData.toObject(),
+//       interestStatus
+//     };
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Profile data fetched successfully",
+//       data: responseData,
+//     });
+//   } catch (err) {
+//     console.log("Error in getting the more details of the profile", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+
+
 const getProfileMoreInformation = async (req, res) => {
   try {
     const { profileId } = req.params;
-    const { viewerId } = req.query; // Check for viewerId in query params
+    const { viewerId } = req.query;
+
+    console.log("👉 profileId:", profileId);
+    console.log("👉 viewerId:", viewerId);
 
     const profileData = await userModel.findById(
-      { _id: profileId },
+      profileId,
       { userPassword: 0 }
     );
 
@@ -530,36 +691,228 @@ const getProfileMoreInformation = async (req, res) => {
       });
     }
 
-    // Logic to update view count (Unique Views)
+    // ================= VIEW COUNT LOGIC ================= //
     if (viewerId && viewerId !== profileId) {
-      // Ensure profileViews array exists (schema update handled)
       if (!profileData.profileViews) {
         profileData.profileViews = [];
       }
 
-      // Add viewerId if not already present
-      if (!profileData.profileViews.includes(viewerId)) {
-        profileData.profileViews.push(viewerId);
-        await profileData.save();
+      const viewerData = await userModel.findById(viewerId);
+
+      if (viewerData && viewerData.paymentDetails?.length > 0) {
+        const now = new Date();
+
+        const activePlans = viewerData.paymentDetails.filter(
+          (p) =>
+            p.subscriptionStatus === "Active" &&
+            new Date(p.subscriptionValidTo) > now
+        );
+
+        console.log("👉 Active plans:", activePlans.length);
+
+        if (activePlans.length > 0) {
+          // Latest active plan
+          activePlans.sort(
+            (a, b) =>
+              new Date(b.subscriptionValidFrom) -
+              new Date(a.subscriptionValidFrom)
+          );
+
+          const actualPlan = activePlans[0];
+          const viewerPlanName = actualPlan.subscriptionType || "";
+
+          console.log("👉 Viewer Plan:", viewerPlanName);
+
+          // ✅ PLAN-BASED RESTRICTION (PREMIUM USER LOGIC)
+          if (viewerPlanName.toLowerCase() === "premium") {
+            const targetActivePlan = profileData.paymentDetails?.find(
+              (p) =>
+                p.subscriptionStatus === "Active" &&
+                new Date(p.subscriptionValidTo) > now
+            );
+
+            if (targetActivePlan) {
+              const targetPlanName = targetActivePlan.subscriptionType || "";
+              console.log("👉 Target Plan:", targetPlanName);
+
+              if (
+                targetPlanName.toLowerCase() === "platinum" ||
+                targetPlanName.toLowerCase() === "gold" ||
+                targetPlanName.toLowerCase() === "golden"
+              ) {
+                return res.status(403).json({
+                  success: false,
+                  message: "You cannot view platinum and gold profiles.",
+                });
+              }
+            }
+          }
+
+          console.log("👉 Using plan ID for tracking:", actualPlan._id);
+
+          const today = new Date();
+          const todayString = today.toISOString().split("T")[0];
+
+          let lastViewStr = actualPlan.lastViewDate
+            ? new Date(actualPlan.lastViewDate)
+              .toISOString()
+              .split("T")[0]
+            : "";
+
+          // ✅ RESET DAILY COUNT
+          if (lastViewStr !== todayString) {
+            console.log("🔄 Resetting daily count");
+
+            await userModel.updateOne(
+              { _id: viewerId },
+              {
+                $set: {
+                  "paymentDetails.$[elem].dailyViewedCount": 0,
+                  "paymentDetails.$[elem].lastViewDate": today,
+                },
+              },
+              {
+                arrayFilters: [
+                  { "elem._id": actualPlan._id }
+                ],
+              }
+            );
+
+            actualPlan.dailyViewedCount = 0;
+          }
+
+          // ✅ GET COUNTS
+          let maxP = actualPlan.maxProfiles;
+          let dailyL = actualPlan.dailyLimit;
+
+          if (maxP === undefined || dailyL === undefined) {
+            const planModel = require("../../model/admin/planModel");
+            const planDef = await planModel.findOne({
+              name: actualPlan.subscriptionType,
+            });
+
+            if (planDef) {
+              maxP = planDef.maxProfiles;
+              dailyL = planDef.dailyLimit;
+            }
+          }
+
+          const isUnlimited = (val) =>
+            val === "Unlimited" ||
+            val === "unlimited" ||
+            parseInt(val) >= 999999;
+
+          // ✅ GOLD/PLATINUM AUTOMATIC UNLIMITED
+          if (
+            viewerPlanName.toLowerCase() === "platinum" ||
+            viewerPlanName.toLowerCase() === "gold" ||
+            viewerPlanName.toLowerCase() === "golden"
+          ) {
+            maxP = "Unlimited";
+            dailyL = "Unlimited";
+          }
+
+          const parsedMax = parseInt(maxP);
+          const parsedDaily = parseInt(dailyL);
+
+          // ✅ GET COUNTS
+          const currentProfileCount =
+            actualPlan.profilesViewedCount || 0;
+
+          const currentDailyCount =
+            actualPlan.dailyViewedCount || 0;
+
+          console.log("👉 Counts:", currentProfileCount, currentDailyCount);
+          console.log("👉 Limits (Final):", maxP, dailyL);
+
+          // ✅ CHECK TOTAL LIMIT FIRST
+          if (
+            !isUnlimited(maxP) &&
+            !isNaN(parsedMax) &&
+            currentProfileCount >= parsedMax
+          ) {
+            return res.status(403).json({
+              success: false,
+              message: "Your limit has been reached.",
+            });
+          }
+
+          // ✅ CHECK DAILY LIMIT FIRST
+          if (
+            !isUnlimited(dailyL) &&
+            !isNaN(parsedDaily) &&
+            currentDailyCount >= parsedDaily
+          ) {
+            return res.status(403).json({
+              success: false,
+              message: "Your daily limit has been reached.",
+            });
+          }
+
+          // ✅ ATOMIC UNIQUE VIEW CHECK (ONLY FOR STATS ON TARGET PROFILE)
+          const profileWithNewView = await userModel.findOneAndUpdate(
+            { _id: profileId, profileViews: { $ne: viewerId } },
+            { $push: { profileViews: viewerId } },
+            { new: true }
+          );
+
+          if (profileWithNewView) {
+            console.log("🔥 New Unique View! Incrementing counts...");
+            
+            // ✅ INCREMENT (ONLY FOR NEW VIEW TO PREVENT DOUBLE COUNTING)
+            await userModel.updateOne(
+              { _id: viewerId },
+              {
+                $inc: {
+                  "paymentDetails.$[elem].profilesViewedCount": 1,
+                  "paymentDetails.$[elem].dailyViewedCount": 1,
+                },
+              },
+              {
+                arrayFilters: [{ "elem._id": actualPlan._id }],
+              }
+            );
+
+            if (!profileData.profileViews) profileData.profileViews = [];
+            profileData.profileViews.push(viewerId);
+          } else {
+            console.log("ℹ️ Profile already viewed by this user. Skipping increment.");
+          }
+        } else {
+          console.log("⚠️ No active plan");
+          // Record view but no increment
+          if (!profileData.profileViews.includes(viewerId)) {
+            profileData.profileViews.push(viewerId);
+            await profileData.save();
+          }
+        }
+      } else {
+        console.log("⚠️ No payment details");
+        // Record view but no increment
+        if (!profileData.profileViews.includes(viewerId)) {
+          profileData.profileViews.push(viewerId);
+          await profileData.save();
+        }
       }
     }
 
-    // Check interest status
+    // ================= INTEREST STATUS ================= //
     let interestStatus = null;
+
     if (viewerId) {
       const interest = await interestModel.findOne({
         senderId: viewerId,
-        targetUserId: profileId
+        targetUserId: profileId,
       });
+
       if (interest) {
         interestStatus = interest.status;
       }
     }
 
-    // Add interestStatus to the response data
     const responseData = {
       ...profileData.toObject(),
-      interestStatus
+      interestStatus,
     };
 
     return res.status(200).json({
@@ -568,7 +921,7 @@ const getProfileMoreInformation = async (req, res) => {
       data: responseData,
     });
   } catch (err) {
-    console.log("Error in getting the more details of the profile", err);
+    console.log("❌ Error:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -583,10 +936,10 @@ const showUserInterests = async (req, res) => {
 
     const { targetUser, permissions, message } = interestData;
 
-    console.log("userId", userId);    
-    console.log("targetUser", targetUser);   
-     console.log("permissions", permissions);    
-     console.log("message", message);
+    console.log("userId", userId);
+    console.log("targetUser", targetUser);
+    console.log("permissions", permissions);
+    console.log("message", message);
 
     // Check if any interest already exists between the two users
     const existingInterest = await interestModel.findOne({
@@ -810,14 +1163,15 @@ const getNewProfileMatches = async (req, res) => {
       const dob = new Date(user.dateOfBirth);
       const age = new Date().getFullYear() - dob.getFullYear();
 
-     return {
-  _id: user._id,
-  agwid: user.agwid, // ✅ ADD THIS
-  userName: user.userName,
-  profileImage: user.profileImage,
-  city: user.city,
-  age,
-};
+      return {
+        _id: user._id,
+        agwid: user.agwid,
+        userName: user.userName,
+        profileImage: user.profileImage,
+        city: user.city,
+        age,
+        paymentDetails: user.paymentDetails, // ✅ ADD THIS
+      };
     });
 
     res.status(200).json({ matches });
@@ -1003,6 +1357,16 @@ const savePlanDetails = async (req, res) => {
             isEmployeeAssisted: false,
             assistedEmployeeId: "",
             assistedEmployeeName: "",
+            // LIMITS
+            maxProfiles: paymentData.planDetails.maxProfiles,
+            profilesViewedCount: 0,
+            dailyLimit: paymentData.planDetails.dailyLimit,
+            dailyViewedCount: 0,
+            lastViewDate: new Date(),
+            canViewProfiles: paymentData.planDetails.canViewProfiles,
+            viewContactDetails: paymentData.planDetails.viewContactDetails,
+            sendInterestRequest: paymentData.planDetails.sendInterestRequest,
+            startChat: paymentData.planDetails.startChat,
           },
         },
         $set: {
@@ -1033,7 +1397,6 @@ const getMyActivePlanDetails = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // ✅ Fetch user and only required fields
     const userData = await userModel.findById(userId, {
       paymentDetails: 1,
       userName: 1,
@@ -1056,8 +1419,21 @@ const getMyActivePlanDetails = async (req, res) => {
       });
     }
 
-    // ✅ Filter only ACTIVE plans
-    const activePlans = userData.paymentDetails.filter(
+    const now = new Date();
+
+    // ✅ Remove expired plans
+    const validPlans = userData.paymentDetails.filter(
+      (plan) => new Date(plan.subscriptionValidTo) > now
+    );
+
+    // ✅ Update DB (clean expired plans)
+    await userModel.findByIdAndUpdate(userId, {
+      paymentDetails: validPlans,
+      isAnySubscriptionTaken: validPlans.length > 0,
+    });
+
+    // ✅ Filter active plans only
+    const activePlans = validPlans.filter(
       (plan) => plan.subscriptionStatus === "Active"
     );
 
@@ -1068,7 +1444,7 @@ const getMyActivePlanDetails = async (req, res) => {
       });
     }
 
-    // ✅ Sort by latest subscriptionValidFrom
+    // ✅ Latest active plan
     activePlans.sort(
       (a, b) =>
         new Date(b.subscriptionValidFrom) - new Date(a.subscriptionValidFrom)
@@ -1076,22 +1452,32 @@ const getMyActivePlanDetails = async (req, res) => {
 
     const latestPlan = activePlans[0];
 
-    // ✅ Format date helper
     const formatDate = (date) =>
-      new Date(date).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      new Date(date).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+      });
 
-    // ✅ Prepare response
     const response = {
       subscriptionType: latestPlan.subscriptionType,
       subscriptionAmount: latestPlan.subscriptionAmount,
       subscriptionValidFrom: formatDate(latestPlan.subscriptionValidFrom),
       subscriptionValidTo: formatDate(latestPlan.subscriptionValidTo),
       subscriptionTransactionId: latestPlan.subscriptionTransactionId,
-      subscriptionOrderId: latestPlan.subscriptionOrderId, // ✅ FIXED
+      subscriptionOrderId: latestPlan.subscriptionOrderId,
       userName: userData.userName,
       userEmail: userData.userEmail,
       userMobile: userData.userMobile,
       agwid: userData.agwid,
+
+      maxProfiles: (latestPlan.subscriptionType.toLowerCase() === "platinum" || latestPlan.subscriptionType.toLowerCase() === "gold" || latestPlan.subscriptionType.toLowerCase() === "golden") ? "Unlimited" : (latestPlan.maxProfiles || 0),
+      profilesViewedCount: latestPlan.profilesViewedCount || 0,
+      dailyLimit: (latestPlan.subscriptionType.toLowerCase() === "platinum" || latestPlan.subscriptionType.toLowerCase() === "gold" || latestPlan.subscriptionType.toLowerCase() === "golden") ? "Unlimited" : (latestPlan.dailyLimit || 0),
+      dailyViewedCount: latestPlan.dailyViewedCount || 0,
+
+      canViewProfiles: latestPlan.canViewProfiles,
+      viewContactDetails: latestPlan.viewContactDetails,
+      sendInterestRequest: latestPlan.sendInterestRequest,
+      startChat: latestPlan.startChat,
     };
 
     return res.status(200).json({
@@ -1337,6 +1723,16 @@ const savePaymentAndActivatePlan = async (req, res) => {
           subscriptionTransactionDate: new Date(),
           subscriptionTransactionId: razorpayPaymentId,
           subscriptionOrderId: razorpayOrderId,
+          // LIMITS
+          maxProfiles: planDetails.maxProfiles,
+          profilesViewedCount: 0,
+          dailyLimit: planDetails.dailyLimit,
+          dailyViewedCount: 0,
+          lastViewDate: new Date(),
+          canViewProfiles: planDetails.canViewProfiles,
+          viewContactDetails: planDetails.viewContactDetails,
+          sendInterestRequest: planDetails.sendInterestRequest,
+          startChat: planDetails.startChat,
         },
       },
     });
@@ -1561,15 +1957,15 @@ const downloadInvoice = async (req, res) => {
     // ================= FOOTER (FIXED BOTTOM) =================
     doc.fontSize(10)
       .fillColor("gray")
-      // .text(
-      //   "Thank you for choosing Agape Vows Matrimony. We wish you a happy married life ❤️",
-      //   40,
-      //   doc.page.height - 50,
-      //   {
-      //     width: doc.page.width - 80,
-      //     align: "center",
-      //   }
-      // );
+    // .text(
+    //   "Thank you for choosing Agape Vows Matrimony. We wish you a happy married life ❤️",
+    //   40,
+    //   doc.page.height - 50,
+    //   {
+    //     width: doc.page.width - 80,
+    //     align: "center",
+    //   }
+    // );
 
     doc.end();
 

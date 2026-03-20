@@ -135,6 +135,7 @@ const paymentSchema = new mongoose.Schema(
       durationType: String,
       maxProfiles: Number,
       profilesType: String,
+      dailyLimit: String,
       canViewProfiles: String,
       viewContactDetails: String,
       sendInterestRequest: String,
