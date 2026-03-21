@@ -81,6 +81,88 @@
 
 // export default Sidebar;
 
+// import { useState } from "react";
+
+// const Sidebar = () => {
+//   const [expandedMenus, setExpandedMenus] = useState({});
+
+//   const toggleSubmenu = (menuKey) => {
+//     setExpandedMenus((prev) => ({
+//       ...prev,
+//       [menuKey]: !prev[menuKey],
+//     }));
+//   };
+
+//   return (
+//     <div className="pan-lhs ad-menu-main">
+//       <div className="ad-menu">
+//         <ul>
+//           <li className="ic-db">
+//             <a href="/admin/dashboard">Dashboard</a>
+//           </li>
+
+//           {/* USERS */}
+//           <li className="ic-user">
+//             <a
+//               href="#"
+//               onClick={(e) => {
+//                 e.preventDefault();
+//                 toggleSubmenu("users");
+//               }}
+//               className={expandedMenus.users ? "active" : ""}
+//             >
+//               Users
+//             </a>
+
+//             <div style={{ display: expandedMenus.users ? "block" : "none" }}>
+//               <ol>
+//                 <li>
+//                   <a href="/admin/new-user-requests">New User Requests</a>
+//                 </li>
+//                 <li>
+//                   <a href="/admin/all-user-list">All Users</a>
+//                 </li>
+//                 <li>
+//                   <a href="/admin/paid-user-list">Paid Users</a>
+//                 </li>
+//                 <li>
+//                   <a href="/admin/add-new-user">Add new User</a>
+//                 </li>
+//                 <li>
+//                   <a href="/admin/deleted-users">Deleted Users</a>
+//                 </li>
+//                  <li>
+//                   <a href="/admin/issues">Issues</a>
+//                 </li>
+//               </ol>
+//             </div>
+//           </li>
+
+//           {/* PRICING */}
+//           <li className="ic-pri">
+//             <a href="/admin/pricing-plans-list">Pricing Plans</a>
+//           </li>
+
+//           {/* EVENTS */}
+//           <li className="ic-pri">
+//             <a href="/admin/events">Events</a>
+//           </li>
+
+//           {/* BLOGS ✅ NEW */}
+//           <li className="ic-pri">
+//             <a href="/admin/blogs">Blogs</a>
+//           </li>
+
+           
+
+//         </ul>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Sidebar;
+
 import { useState } from "react";
 
 const Sidebar = () => {
@@ -93,28 +175,36 @@ const Sidebar = () => {
     }));
   };
 
+  // Inline icon style
+  const iconStyle = {
+    marginRight: "8px",
+    fontSize: "16px",
+  };
+
   return (
     <div className="pan-lhs ad-menu-main">
       <div className="ad-menu">
         <ul>
-          <li className="ic-db">
-            <a href="/admin/dashboard">Dashboard</a>
+          <li style={{ marginBottom: "10px" }}>
+            <a href="/admin/dashboard">
+              <span style={iconStyle}>🏠</span> Dashboard
+            </a>
           </li>
 
           {/* USERS */}
-          <li className="ic-user">
+          <li style={{ marginBottom: "10px" }}>
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
                 toggleSubmenu("users");
               }}
-              className={expandedMenus.users ? "active" : ""}
+              style={{ fontWeight: expandedMenus.users ? "bold" : "normal" }}
             >
-              Users
+              <span style={iconStyle}>👤</span> Users
             </a>
 
-            <div style={{ display: expandedMenus.users ? "block" : "none" }}>
+            <div style={{ display: expandedMenus.users ? "block" : "none", marginLeft: "20px" }}>
               <ol>
                 <li>
                   <a href="/admin/new-user-requests">New User Requests</a>
@@ -131,7 +221,7 @@ const Sidebar = () => {
                 <li>
                   <a href="/admin/deleted-users">Deleted Users</a>
                 </li>
-                 <li>
+                <li>
                   <a href="/admin/issues">Issues</a>
                 </li>
               </ol>
@@ -139,22 +229,25 @@ const Sidebar = () => {
           </li>
 
           {/* PRICING */}
-          <li className="ic-pri">
-            <a href="/admin/pricing-plans-list">Pricing Plans</a>
+          <li style={{ marginBottom: "10px" }}>
+            <a href="/admin/pricing-plans-list">
+              <span style={iconStyle}>💳</span> Pricing Plans
+            </a>
           </li>
 
           {/* EVENTS */}
-          <li className="ic-pri">
-            <a href="/admin/events">Events</a>
+          <li style={{ marginBottom: "10px" }}>
+            <a href="/admin/events">
+              <span style={iconStyle}>📅</span> Events
+            </a>
           </li>
 
-          {/* BLOGS ✅ NEW */}
-          <li className="ic-pri">
-            <a href="/admin/blogs">Blogs</a>
+          {/* BLOGS */}
+          <li style={{ marginBottom: "10px" }}>
+            <a href="/admin/blogs">
+              <span style={iconStyle}>📝</span> Blogs
+            </a>
           </li>
-
-           
-
         </ul>
       </div>
     </div>

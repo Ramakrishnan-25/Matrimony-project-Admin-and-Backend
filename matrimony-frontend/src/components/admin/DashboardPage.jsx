@@ -1,8 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Chart, registerables } from "chart.js";
 
 import profImages from "/assets/images/profiles/1.jpg";
 import NewLayout from "./layout/NewLayout";
+import {
+  getNewRequestedUsers, getAllUserData,
+  getPaidUserData,
+  getAllPlanData
+} from "../../api/service/adminServices";
 
 Chart.register(...registerables);
 
@@ -13,118 +18,436 @@ const DashboardPage = () => {
     monthlyEarningsChart: null,
   });
 
+
+  const [newUserCount, setNewUserCount] = useState(0);
+  const [plans, setPlans] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [paidUsers, setPaidUsers] = useState([]);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [yearlyEarningsUSD, setYearlyEarningsUSD] = useState(0);
+
+  const renewalUsers = paidUsers.filter(user =>
+  user.paymentDetails?.some(payment => {
+
+    const expiry = new Date(payment.subscriptionValidTo);
+    const today = new Date();
+
+    const diff =
+      (expiry - today) / (1000 * 60 * 60 * 24);
+
+    return diff <= 7 && diff >= 0;
+  })
+);
+
+
+  const activeSubscribedUsers = paidUsers.filter(user =>
+  user.paymentDetails?.some(
+    payment => payment.subscriptionStatus === "Active"
+  )
+);
+
   useEffect(() => {
-    Chart.defaults.font.size = 14;
-    Chart.defaults.color = "#666";
+    if (paidUsers.length === 0) return;
 
-    const initCharts = () => {
-      if (chartsRef.current.earningChart) {
-        chartsRef.current.earningChart.destroy();
-      }
-      if (chartsRef.current.usersChart) {
-        chartsRef.current.usersChart.destroy();
-      }
-      if (chartsRef.current.monthlyEarningsChart) {
-        chartsRef.current.monthlyEarningsChart.destroy();
-      }
+    const total = paidUsers.reduce((sum, user) => {
+      if (!user.paymentDetails) return sum;
 
-      // Earnings Pie Chart
-      const earningCanvas = document.getElementById("Chart_earni");
-      if (earningCanvas) {
-        chartsRef.current.earningChart = new Chart(earningCanvas, {
-          type: "pie",
-          data: {
-            labels: ["Premium Plus", "Premium"],
-            datasets: [
-              {
-                data: [50, 60],
-                backgroundColor: ["#8463FF", "#6384FF"],
-              },
-            ],
-          },
-        });
+      const userTotal = user.paymentDetails
+        .filter(payment => payment.subscriptionStatus === "Active")
+        .reduce((subSum, payment) =>
+          subSum + Number(payment.subscriptionAmount || 0),
+          0);
+
+      return sum + userTotal;
+    }, 0);
+
+    setTotalEarnings(total);
+
+  }, [paidUsers]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const allRes = await getAllUserData();
+      if (allRes?.data?.success) {
+        setAllUsers(allRes.data.data);
       }
 
-      // Users Pie Chart
-      const usersCanvas = document.getElementById("Chart_users");
-      if (usersCanvas) {
-        chartsRef.current.usersChart = new Chart(usersCanvas, {
-          type: "pie",
-          data: {
-            labels: ["Premium Plus", "Premium", "Free"],
-            datasets: [
-              {
-                data: [40, 30, 30],
-                backgroundColor: ["#198754", "#ffc107", "#6c757d"],
-              },
-            ],
-          },
-        });
+      const paidRes = await getPaidUserData();
+      if (paidRes?.data?.success) {
+        setPaidUsers(paidRes.data.data);
       }
 
-      // Monthly Earnings Bar Chart
-      const earningsReceiptCanvas = document.getElementById("Chart_earni_rece");
-      if (earningsReceiptCanvas) {
-        chartsRef.current.monthlyEarningsChart = new Chart(
-          earningsReceiptCanvas,
-          {
-            type: "bar",
-            data: {
-              labels: [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ],
-              datasets: [
-                {
-                  label: "Monthly Earnings",
-                  data: [
-                    4000, 5000, 4550, 6005, 8550, 9008, 3220, 4880, 6550, 2500,
-                    4000, 5000,
-                  ],
-                  backgroundColor: "rgba(255,99,132,0.2)",
-                  borderColor: "rgba(255,99,132,1)",
-                  borderWidth: 2,
-                  hoverBackgroundColor: "rgba(255,99,132,0.4)",
-                  hoverBorderColor: "rgba(255,99,132,1)",
-                },
-              ],
-            },
-            options: {
-              scales: {
-                y: {
-                  beginAtZero: true,
-                },
-              },
-            },
-          }
-        );
+      const planRes = await getAllPlanData();
+      if (planRes?.data?.success) {
+        setPlans(planRes.data.data);
       }
     };
 
-    initCharts();
+    fetchUsers();
+  }, []);
 
-    // Update copyright year
-    const copyrightYear = document.getElementById("cry");
-    if (copyrightYear) {
-      copyrightYear.textContent = new Date().getFullYear();
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const res = await getAllPlanData();
+      if (res.status === 200) {
+        const activePlans = res.data.data.filter(
+          (plan) => plan.status === "Active"
+        );
+        setPlans(activePlans);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  useEffect(() => {
+    const fetchNewUserCount = async () => {
+      try {
+        const response = await getNewRequestedUsers();
+
+        if (response?.data?.success) {
+          const users = response.data.data;
+
+          const today = new Date().toISOString().split("T")[0];
+
+          const todayUsers = users.filter((user) =>
+            user.createdAt.startsWith(today)
+          );
+
+          setNewUserCount(todayUsers.length);
+        }
+      } catch (error) {
+        console.error("Error fetching new users count:", error);
+      }
+    };
+
+    fetchNewUserCount();
+  }, []);
+
+
+
+  //   useEffect(() => {
+  //     Chart.defaults.font.size = 14;
+  //     Chart.defaults.color = "#666";
+
+  //     const initCharts = () => {
+  //       if (chartsRef.current.earningChart) {
+  //         chartsRef.current.earningChart.destroy();
+  //       }
+  //       if (chartsRef.current.usersChart) {
+  //         chartsRef.current.usersChart.destroy();
+  //       }
+  //       if (chartsRef.current.monthlyEarningsChart) {
+  //         chartsRef.current.monthlyEarningsChart.destroy();
+  //       }
+
+  //       // Earnings Pie Chart
+  //     const earningCanvas = document.getElementById("Chart_earni");
+
+  // if (earningCanvas && paidUsers.length > 0) {
+
+  //   if (chartsRef.current.earningChart) {
+  //     chartsRef.current.earningChart.destroy();
+  //   }
+
+  //   const earningsByPlan = {};
+
+  //   paidUsers.forEach(user => {
+  //     user.paymentDetails?.forEach(payment => {
+  //       if (payment.subscriptionStatus === "Active") {
+  //         const type = payment.subscriptionType;
+  //         const amount = Number(payment.subscriptionAmount || 0);
+  //         earningsByPlan[type] = (earningsByPlan[type] || 0) + amount;
+  //       }
+  //     });
+  //   });
+
+  //   const labels = Object.keys(earningsByPlan);
+  //   const data = Object.values(earningsByPlan);
+
+  //   chartsRef.current.earningChart = new Chart(earningCanvas, {
+  //     type: "pie",
+  //     data: {
+  //       labels,
+  //       datasets: [{
+  //         data,
+  //         backgroundColor: [
+  //           "#8463FF",
+  //           "#6384FF",
+  //           "#198754",
+  //           "#ff07a8",
+  //           "#dcbd35"
+  //         ].slice(0, labels.length),
+  //       }],
+  //     },
+  //   });
+  // }
+
+
+
+
+  //       // Monthly Earnings Bar Chart
+  //       const earningsReceiptCanvas = document.getElementById("Chart_earni_rece");
+  //       if (earningsReceiptCanvas) {
+  //         chartsRef.current.monthlyEarningsChart = new Chart(
+  //           earningsReceiptCanvas,
+  //           {
+  //             type: "bar",
+  //             data: {
+  //               labels: [
+  //                 "Jan",
+  //                 "Feb",
+  //                 "Mar",
+  //                 "Apr",
+  //                 "May",
+  //                 "Jun",
+  //                 "Jul",
+  //                 "Aug",
+  //                 "Sep",
+  //                 "Oct",
+  //                 "Nov",
+  //                 "Dec",
+  //               ],
+  //               datasets: [
+  //                 {
+  //                   label: "Monthly Earnings",
+  //                   data: [
+  //                     4000, 5000, 4550, 6005, 8550, 9008, 3220, 4880, 6550, 2500,
+  //                     4000, 5000,
+  //                   ],
+  //                   backgroundColor: "rgba(255,99,132,0.2)",
+  //                   borderColor: "rgba(255,99,132,1)",
+  //                   borderWidth: 2,
+  //                   hoverBackgroundColor: "rgba(255,99,132,0.4)",
+  //                   hoverBorderColor: "rgba(255,99,132,1)",
+  //                 },
+  //               ],
+  //             },
+  //             options: {
+  //               scales: {
+  //                 y: {
+  //                   beginAtZero: true,
+  //                 },
+  //               },
+  //             },
+  //           }
+  //         );
+  //       }
+  //     };
+
+  //     initCharts();
+
+
+  //     // Update copyright year
+  //     const copyrightYear = document.getElementById("cry");
+  //     if (copyrightYear) {
+  //       copyrightYear.textContent = new Date().getFullYear();
+  //     }
+
+  //     // Initialize menu script if available
+  //     if (window.reinitializeMenu) {
+  //       window.reinitializeMenu();
+  //     }
+
+  //     // Initialize Bootstrap tooltips if available
+  //     if (typeof bootstrap !== "undefined") {
+  //       const tooltipTriggerList = [].slice.call(
+  //         document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  //       );
+  //       tooltipTriggerList.map(function (tooltipTriggerEl) {
+  //         return new bootstrap.Tooltip(tooltipTriggerEl);
+  //       });
+  //     }
+
+  //     // Cleanup function
+  //     return () => {
+  //       // Destroy all charts when component unmounts
+  //       if (chartsRef.current.earningChart) {
+  //         chartsRef.current.earningChart.destroy();
+  //       }
+  //       if (chartsRef.current.usersChart) {
+  //         chartsRef.current.usersChart.destroy();
+  //       }
+  //       if (chartsRef.current.monthlyEarningsChart) {
+  //         chartsRef.current.monthlyEarningsChart.destroy();
+  //       }
+  //     };
+  //   }, []);
+
+
+  useEffect(() => {
+    if (!paidUsers.length) return;
+
+    Chart.defaults.font.size = 14;
+    Chart.defaults.color = "#666";
+
+    const earningCanvas = document.getElementById("Chart_earni");
+    if (!earningCanvas) return;
+
+    if (chartsRef.current.earningChart) {
+      chartsRef.current.earningChart.destroy();
     }
 
-    // Initialize menu script if available
+    const earningsByPlan = {};
+
+    paidUsers.forEach(user => {
+      user.paymentDetails?.forEach(payment => {
+        if (payment.subscriptionStatus === "Active") {
+          const type = payment.subscriptionType;
+          const amount = Number(payment.subscriptionAmount || 0);
+          earningsByPlan[type] =
+            (earningsByPlan[type] || 0) + amount;
+        }
+      });
+    });
+
+    const labels = Object.keys(earningsByPlan);
+    const data = Object.values(earningsByPlan);
+
+    chartsRef.current.earningChart = new Chart(earningCanvas, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: [
+            "#8463FF",
+            "#6384FF",
+            "#198754",
+            "#ff07a8",
+            "#dcbd35"
+          ].slice(0, labels.length),
+        }],
+      },
+    });
+
+    return () => {
+      if (chartsRef.current.earningChart) {
+        chartsRef.current.earningChart.destroy();
+      }
+    };
+
+  }, [paidUsers]);
+
+  useEffect(() => {
+
+    if (!paidUsers.length) return;
+
+    Chart.defaults.font.size = 14;
+    Chart.defaults.color = "#666";
+
+    if (chartsRef.current.monthlyEarningsChart) {
+      chartsRef.current.monthlyEarningsChart.destroy();
+    }
+
+    const earningsReceiptCanvas =
+      document.getElementById("Chart_earni_rece");
+
+    if (earningsReceiptCanvas) {
+
+      const USD_RATE = 83; // INR → USD
+      const currentYear = new Date().getFullYear();
+
+      const monthlyTotalsINR = new Array(12).fill(0);
+
+      paidUsers.forEach(user => {
+        user.paymentDetails?.forEach(payment => {
+
+          if (
+            payment.subscriptionStatus === "Active" &&
+            payment.subscriptionTransactionDate
+          ) {
+
+            const paymentDate =
+              new Date(payment.subscriptionTransactionDate);
+
+            // ✅ Prevent Invalid Date issue
+            if (isNaN(paymentDate)) return;
+
+            const paymentYear =
+              paymentDate.getFullYear();
+
+            const paymentMonth =
+              paymentDate.getMonth();
+
+            if (paymentYear === currentYear) {
+              monthlyTotalsINR[paymentMonth] +=
+                Number(payment.subscriptionAmount || 0);
+            }
+          }
+        });
+      });
+
+      // ✅ Convert INR → USD
+      const monthlyTotalsUSD =
+        monthlyTotalsINR.map(
+          amount => amount / USD_RATE
+        );
+
+      // ✅ Calculate total current year INR
+      const totalYearINR = monthlyTotalsINR.reduce(
+        (sum, amount) => sum + amount,
+        0
+      );
+
+      // ✅ Convert to USD
+      const totalYearUSD = totalYearINR / USD_RATE;
+
+      // ✅ Store in state
+      setYearlyEarningsUSD(totalYearUSD);
+
+      chartsRef.current.monthlyEarningsChart =
+        new Chart(earningsReceiptCanvas, {
+          type: "bar",
+          data: {
+            labels: [
+              "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+            ],
+            datasets: [{
+              label: `Yearly Earnings (${currentYear})`,
+              data: monthlyTotalsUSD,
+              backgroundColor: "rgba(255,99,132,0.2)",
+              borderColor: "rgba(255,99,132,1)",
+              borderWidth: 2,
+              hoverBackgroundColor: "rgba(255,99,132,0.4)",
+              hoverBorderColor: "rgba(255,99,132,1)",
+            }],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return "$" + context.raw.toFixed(2);
+                  }
+                }
+              }
+            }
+          },
+        });
+    }
+
+    // Update copyright year
+    const copyrightYear =
+      document.getElementById("cry");
+    if (copyrightYear) {
+      copyrightYear.textContent =
+        new Date().getFullYear();
+    }
+
+    // Reinitialize menu
     if (window.reinitializeMenu) {
       window.reinitializeMenu();
     }
 
-    // Initialize Bootstrap tooltips if available
+    // Bootstrap tooltips
     if (typeof bootstrap !== "undefined") {
       const tooltipTriggerList = [].slice.call(
         document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -134,20 +457,68 @@ const DashboardPage = () => {
       });
     }
 
-    // Cleanup function
     return () => {
-      // Destroy all charts when component unmounts
-      if (chartsRef.current.earningChart) {
-        chartsRef.current.earningChart.destroy();
-      }
-      if (chartsRef.current.usersChart) {
-        chartsRef.current.usersChart.destroy();
-      }
       if (chartsRef.current.monthlyEarningsChart) {
         chartsRef.current.monthlyEarningsChart.destroy();
       }
     };
-  }, []);
+
+  }, [paidUsers]);
+
+  // Users Pie Chart
+
+  useEffect(() => {
+    if (plans.length === 0 || paidUsers.length === 0) return;
+
+    const usersCanvas = document.getElementById("Chart_users");
+    if (!usersCanvas) return;
+
+    if (chartsRef.current.usersChart) {
+      chartsRef.current.usersChart.destroy();
+    }
+
+    const labels = plans.map(plan => plan.name);
+
+    const dataCounts = plans.map(plan =>
+      paidUsers.filter(user =>
+        user.paymentDetails?.some(
+          payment =>
+            payment.subscriptionType === plan.name &&
+            payment.subscriptionStatus === "Active"
+        )
+      ).length
+    );
+
+    chartsRef.current.usersChart = new Chart(usersCanvas, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: dataCounts,
+            backgroundColor: [
+              "#198754",
+              "#ff07a8",
+              "#0d6efd",
+              "#dcbd35",
+              "#20c997",
+              "#6610f2"
+            ].slice(0, plans.length),
+          },
+        ],
+      },
+    });
+
+    return () => {
+      if (chartsRef.current.usersChart) {
+        chartsRef.current.usersChart.destroy();
+      }
+    };
+  }, [plans, paidUsers]);
+
+  
+
+
   return (
     <NewLayout>
       <div className="pan-rhs">
@@ -178,7 +549,7 @@ const DashboardPage = () => {
             <div className="box-com box-qui box-drk grn-box">
               <h4>New Users</h4>
               <h2>User requests</h2>
-              <span className="bnum">69</span>
+              <span className="bnum">{newUserCount}</span>
               <p>This count for today how many users can register.</p>
               <a href="admin-new-user-requests.html" className="fclick"></a>
             </div>
@@ -186,7 +557,7 @@ const DashboardPage = () => {
               <h3>
                 <span>All</span> Members
               </h3>
-              <span className="bnum">6900</span>
+              <span className="bnum">{allUsers.length}</span>
               <canvas id="Chart_users"></canvas>
               <a href="admin-new-user-requests.php" className="fclick"></a>
             </div>
@@ -204,73 +575,27 @@ const DashboardPage = () => {
           </div>
           <div className="col-md-3">
             <div className="box-com box-qui box-lig box-new-user">
-              <h2>New Registrants</h2>
-              <span className="bnum">38</span>
-              <div className="users-cir-thum-hori">
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-                <span>
-                  <img
-                    src={profImages}
-                    data-bs-toggle="tooltip"
-                    title="Hooray!"
-                  />
-                </span>
-              </div>
+              <h2>Subscribed Users</h2>
+            <span className="bnum">{activeSubscribedUsers.length}</span>
+            <div className="users-cir-thum-hori">
+  {activeSubscribedUsers.slice(0, 8).map((user, index) => (
+    <span key={index}>
+      <img
+        src={user.profileImage || profImages}
+        data-bs-toggle="tooltip"
+        title={user.userName}
+        alt={user.userName}
+      />
+    </span>
+  ))}
+</div>
             </div>
             <div className="box-com box-qui box-lig ali-cen">
               <h3>
                 <span>Total</span> Earnings
               </h3>
               <span className="bnum">
-                <sub>$</sub>10,069{" "}
+                <sub>₹</sub>{totalEarnings.toLocaleString()}
               </span>
               <canvas id="Chart_earni"></canvas>
             </div>
@@ -306,10 +631,10 @@ const DashboardPage = () => {
           <div className="col-md-6">
             <div className="box-com box-qui box-lig ali-cen">
               <h3>
-                <span>Monthly</span> Earnings
+                <span>Yearly</span> Earnings
               </h3>
               <span className="bnum">
-                <sub>$</sub>10,069{" "}
+                <sub>$</sub>{yearlyEarningsUSD.toFixed(2)}
               </span>
               <canvas id="Chart_earni_rece"></canvas>
             </div>
@@ -371,7 +696,7 @@ const DashboardPage = () => {
                     <th>Plan type</th>
                   </tr>
                 </thead>
-                <tbody>
+                {/* <tbody>
                   <tr>
                     <td>1</td>
                     <td>
@@ -642,7 +967,42 @@ const DashboardPage = () => {
                       </div>
                     </td>
                   </tr>
-                </tbody>
+                </tbody> */}
+
+                <tbody>
+  {allUsers.slice(0,6).map((user,index)=>(
+    <tr key={user._id}>
+      <td>{index+1}</td>
+
+      <td>
+        <div className="prof-table-thum">
+          <div className="pro">
+            <img src={user.profileImage || profImages} alt="" />
+          </div>
+
+          <div className="pro-info">
+            <h5>{user.userName}</h5>
+            <p>{user.userEmail}</p>
+          </div>
+        </div>
+      </td>
+
+      <td>{user.userMobile}</td>
+
+      <td>
+        {new Date(user.createdAt).toLocaleDateString()}
+      </td>
+
+      <td>
+        <span className="hig-grn">
+          {user.isAnySubscriptionTaken ? "Premium" : "Free"}
+        </span>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
+
               </table>
             </div>
           </div>
