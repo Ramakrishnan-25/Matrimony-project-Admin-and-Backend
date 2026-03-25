@@ -113,6 +113,7 @@ userAuthRoutes.get("/get-profile-more-information/:profileId", userAuthControlle
 userAuthRoutes.get("/get-plan-details", userAuthController.getPlanDetails);
 userAuthRoutes.get("/get-my-active-plan-details/:userId", userAuthController.getMyActivePlanDetails);
 userAuthRoutes.get("/get-short-listed-profile-data/:userId", userAuthController.getShortListedProfileData);
+userAuthRoutes.get("/users/:userId/who-viewed-you-page", userAuthController.getWhoViewedYou);
 
 userAuthRoutes.get("/get-events", userAuthController.getAllEvents);
 userAuthRoutes.get(
@@ -160,5 +161,15 @@ userAuthRoutes.post(
   userAuthController.reportIssue
 );
 
+userAuthRoutes.get(
+  "/get-user-counts",
+  userAuthController.getUserCounts
+);
+
+// Block/Unblock & Clear Chat Routes
+userAuthRoutes.get("/api/users/:userId/blocked-profiles", userAuthController.getBlockedProfiles);
+userAuthRoutes.post("/api/users/:userId/block", userAuthController.blockUser);
+userAuthRoutes.post("/api/users/:userId/unblock", userAuthController.unblockUser);
+userAuthRoutes.post("/clear-chat/:chatId", userChatController.clearChat);
 
 module.exports = userAuthRoutes;

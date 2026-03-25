@@ -461,8 +461,8 @@ const getAllUserProfileData = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Get current user's gender
-    const currentUser = await userModel.findById(userId, { gender: 1 });
+    // Get current user's gender and blocked list
+    const currentUser = await userModel.findById(userId, { gender: 1, blockedUsers: 1 });
     if (!currentUser) {
       return res.status(404).json({
         success: false,
@@ -471,11 +471,12 @@ const getAllUserProfileData = async (req, res) => {
     }
 
     const userGender = currentUser.gender;
+    const blockedIds = currentUser.blockedUsers?.map(b => b.user.toString()) || [];
 
-    // Find all users excluding same gender and current user
+    // Find all users excluding same gender, current user, and blocked users
     const userData = await userModel.find(
       {
-        _id: { $ne: userId },
+        _id: { $ne: userId, $nin: blockedIds },
         gender: { $ne: userGender },
       },
       { userPassword: 0 }
@@ -858,7 +859,7 @@ const getProfileMoreInformation = async (req, res) => {
 
           if (profileWithNewView) {
             console.log("🔥 New Unique View! Incrementing counts...");
-            
+
             // ✅ INCREMENT (ONLY FOR NEW VIEW TO PREVENT DOUBLE COUNTING)
             await userModel.updateOne(
               { _id: viewerId },
@@ -2047,9 +2048,176 @@ const reportIssue = async (req, res) => {
   }
 };
 
+/* =========================
+   GET USER COUNTS
+========================== */
+const getUserCounts = async (req, res) => {
+  try {
+    const totalUsers = await userModel.countDocuments({
+      isApproved: true,
+      isDeleted: false,
+    });
+
+    const maleCount = await userModel.countDocuments({
+      isApproved: true,
+      isDeleted: false,
+      gender: "Male",
+    });
+
+    const femaleCount = await userModel.countDocuments({
+      isApproved: true,
+      isDeleted: false,
+      gender: "Female",
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers,
+        maleCount,
+        femaleCount,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const getWhoViewedYou = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const viewerIds = user.profileViews || [];
+
+    if (viewerIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No profile views found",
+        data: [],
+      });
+    }
+
+    // Find profiles of users who viewed
+    const profiles = await userModel.find(
+      { _id: { $in: viewerIds } },
+      {
+        userName: 1,
+        profileImage: 1,
+        age: 1,
+        city: 1,
+        height: 1,
+        degree: 1,
+      }
+    );
+
+    // Map profiles back to the order of viewerIds to show most recent first
+    const orderedProfiles = viewerIds
+      .slice()
+      .reverse()
+      .map((id) => profiles.find((p) => p._id.toString() === id.toString()))
+      .filter((p) => p !== undefined);
+
+    return res.status(200).json({
+      success: true,
+      data: orderedProfiles,
+    });
+  } catch (err) {
+    console.error("Error in getWhoViewedYou:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const blockUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { blockedUserId } = req.body;
+
+    if (userId === blockedUserId) {
+      return res.status(400).json({ success: false, message: "You cannot block yourself" });
+    }
+
+    await userModel.findByIdAndUpdate(userId, {
+      $addToSet: { 
+        blockedUsers: { 
+          user: blockedUserId, 
+          blockedAt: new Date() 
+        } 
+      }
+    });
+
+    res.status(200).json({ success: true, message: "User blocked successfully" });
+  } catch (err) {
+    console.error("Error blocking user:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const unblockUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { blockedUserId } = req.body;
+
+    await userModel.findByIdAndUpdate(userId, {
+      $pull: { blockedUsers: { user: blockedUserId } }
+    });
+
+    res.status(200).json({ success: true, message: "User unblocked successfully" });
+  } catch (err) {
+    console.error("Error unblocking user:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const getBlockedProfiles = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await userModel.findById(userId).populate({
+      path: "blockedUsers.user",
+      select: "userName profileImage city age height degree"
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Transform to match frontend expectation
+    const blockedData = user.blockedUsers.map(item => {
+      if (!item.user) return null;
+      const userObj = item.user.toObject();
+      return {
+        ...userObj,
+        _id: userObj._id.toString(),
+        blockedAt: item.blockedAt
+      };
+    }).filter(item => item !== null);
+
+    res.status(200).json({
+      success: true,
+      data: blockedData
+    });
+  } catch (err) {
+    console.error("Error fetching blocked profiles:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 module.exports = {
-  getAllEvents,
+  getWhoViewedYou,
   getShortListedProfileData,
   shortListTheProfile,
   getMyActivePlanDetails,
@@ -2069,9 +2237,12 @@ module.exports = {
   isUserMadeTheInterest,
   deleteAdditionalImages,
   savePaymentAndActivatePlan,
-  // cancelUserPlan,
   downloadInvoice,
   getAllEvents,
   getAllBlogs,
-  reportIssue
+  reportIssue,
+  getUserCounts,
+  blockUser,
+  unblockUser,
+  getBlockedProfiles
 };

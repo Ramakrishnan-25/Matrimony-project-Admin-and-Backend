@@ -198,7 +198,7 @@
 //     });
 //   }
 // };
- 
+
 // const deleteUser = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -705,7 +705,6 @@ module.exports = {
   restoreUser,
   updateUser,
   getDeletedUsers,
-  
+
 
 };
-  

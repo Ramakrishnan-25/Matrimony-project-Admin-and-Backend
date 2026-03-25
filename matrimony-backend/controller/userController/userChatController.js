@@ -106,16 +106,31 @@ const getMyChatList = async (req, res) => {
       })
       .sort({ updatedAt: -1 });
 
-    const chatList = await Promise.all(
+    const chatList = (await Promise.all(
       chats.map(async (chat) => {
         const otherParticipantId = chat.participants.find(
           (id) => id.toString() !== senderId
         );
 
+        // Check if other participant is blocked or if they have blocked the current user
+        const currentUser = await userModel.findById(senderId, { blockedUsers: 1 });
         const otherUser = await userModel.findById(otherParticipantId, {
           userName: 1,
           profileImage: 1,
+          blockedUsers: 1,
         });
+
+        // Skip if either user has blocked the other
+        const isSelfBlocked = currentUser?.blockedUsers?.some(
+          (b) => b.user.toString() === otherParticipantId.toString()
+        );
+        const isOtherBlocked = otherUser?.blockedUsers?.some(
+          (b) => b.user.toString() === senderId.toString()
+        );
+
+        if (isSelfBlocked || isOtherBlocked) {
+          return null;
+        }
 
         const lastMessage =
           chat.messages.length > 0
@@ -134,11 +149,12 @@ const getMyChatList = async (req, res) => {
                 senderId: lastMessage.senderId,
                 message: lastMessage.message,
                 timestamp: lastMessage.timestamp,
+                isMyMessage: lastMessage.senderId.toString() === senderId,
               }
             : null,
         };
       })
-    );
+    )).filter((chat) => chat !== null);
 
     return res.status(200).json({
       success: true,
@@ -200,9 +216,42 @@ const getMyIndividualChat = async (req, res) => {
   }
 };
 
+const clearChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const chat = await chatModel.findByIdAndUpdate(
+      chatId,
+      {
+        $set: { messages: [] },
+      },
+      { new: true }
+    );
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Chat history cleared successfully",
+    });
+  } catch (err) {
+    console.error("Error clearing chat:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   getAllChatDoneByTheUsers,
   saveMyChats,
   getMyChatList,
   getMyIndividualChat,
+  clearChat,
 };

@@ -195,64 +195,68 @@ const userSchema = new mongoose.Schema(
       ========================== */
       isAnySubscriptionTaken: { type: Boolean, default: false },
 
-     paymentDetails: [
-  {
-    subscriptionValidFrom: Date,
-    subscriptionValidTo: Date,
-    subscriptionType: String,
-    subscriptionAmount: Number,
-    subscriptionStatus: {
-      type: String,
-      default: "Active",
-    },
+      paymentDetails: [
+         {
+            subscriptionValidFrom: Date,
+            subscriptionValidTo: Date,
+            subscriptionType: String,
+            subscriptionAmount: Number,
+            subscriptionStatus: {
+               type: String,
+               default: "Active",
+            },
 
-    // ✅ ADD THIS
-    cancelReason: String,
-    cancelMessage: String,
+            // ✅ ADD THIS
+            cancelReason: String,
+            cancelMessage: String,
 
-    subscriptionTransactionDate: Date,
-    subscriptionTransactionId: String,
-    subscriptionOrderId: {
-  type: String,
-  required: true,
-},
-    isEmployeeAssisted: { type: Boolean, default: false },
-    assistedEmployeeId: String,
-    assistedEmployeeName: String,
-    maxProfiles: { type: mongoose.Schema.Types.Mixed, default: 0 },
-    profilesViewedCount: { type: Number, default: 0 },
-    dailyLimit: { type: mongoose.Schema.Types.Mixed, default: 0 },
-    dailyViewedCount: { type: Number, default: 0 },
-    lastViewDate: { type: Date },
-    canViewProfiles: { type: String },
-    viewContactDetails: { type: String },
-    sendInterestRequest: { type: String },
-    startChat: { type: String },
-  },
-],
+            subscriptionTransactionDate: Date,
+            subscriptionTransactionId: String,
+            subscriptionOrderId: {
+               type: String,
+               required: true,
+            },
+            isEmployeeAssisted: { type: Boolean, default: false },
+            assistedEmployeeId: String,
+            assistedEmployeeName: String,
+            maxProfiles: { type: mongoose.Schema.Types.Mixed, default: 0 },
+            profilesViewedCount: { type: Number, default: 0 },
+            dailyLimit: { type: mongoose.Schema.Types.Mixed, default: 0 },
+            dailyViewedCount: { type: Number, default: 0 },
+            lastViewDate: { type: Date },
+            canViewProfiles: { type: String },
+            viewContactDetails: { type: String },
+            sendInterestRequest: { type: String },
+            startChat: { type: String },
+         },
+      ],
 
       /* =========================
    SOFT DELETE
 ========================== */
-isDeleted: {
-   type: Boolean,
-   default: false,
-},
-deletedAt: {
-   type: Date,
-   default: null,
-},
+      isDeleted: {
+         type: Boolean,
+         default: false,
+      },
+      deletedAt: {
+         type: Date,
+         default: null,
+      },
 
       /* =========================
          MEDIA
       ========================== */
       profileImage: { type: String },
       additionalImages: [{ type: String }],
-     selfIntroductionVideo: {
-    type: String,
-    default: "",
-  },
+      selfIntroductionVideo: {
+         type: String,
+         default: "",
+      },
       profileViews: [{ type: String }],
+      blockedUsers: [{
+         user: { type: mongoose.Schema.Types.ObjectId, ref: "UserModel" },
+         blockedAt: { type: Date, default: Date.now }
+      }],
    },
    { timestamps: true }
 );
