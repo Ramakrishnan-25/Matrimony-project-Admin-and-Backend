@@ -1,172 +1,26 @@
-// import { useState } from "react";
-
-// const Sidebar = () => {
-//   const [expandedMenus, setExpandedMenus] = useState({});
-
-//   const toggleSubmenu = (menuKey) => {
-//     console.log("Toggling menu:", menuKey);
-//     setExpandedMenus((prev) => {
-//       const newState = {
-//         ...prev,
-//         [menuKey]: !prev[menuKey],
-//       };
-//       console.log("New state:", newState);
-//       return newState;
-//     });
-//   };
-
-//   return (
-//     <div className="pan-lhs ad-menu-main">
-//       <div className="ad-menu">
-//         <ul>
-//           <li className="ic-db">
-//             <a href="/admin/dashboard">Dashboard</a>
-//           </li>
-
-//           <li className="ic-user">
-//             <a
-//               href="#"
-//               onClick={(e) => {
-//                 e.preventDefault();
-//                 toggleSubmenu("users");
-//               }}
-//               className={expandedMenus.users ? "active" : ""}
-//             >
-//               Users
-//             </a>
-//             {/* Fixed: Using div without submenu class to match HTML structure */}
-//             <div style={{ display: expandedMenus.users ? "block" : "none" }}>
-//               <ol>
-//                 <li>
-//                   <a href="/admin/new-user-requests">New User Requests</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/all-user-list">All Users</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/paid-user-list">Paid Users</a>
-//                 </li>
-//                 {/* <li>
-//                   <a href="/admin/standard-user-list">Standard Users</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/premium-user-list">Premium Users</a>
-//                 </li> */}
-//                 <li>
-//                   <a href="/admin/add-new-user">Add new User</a>
-//                 </li>
-//                  <li>
-//                    <a href="/admin/deleted-users">Deleted Users</a>
-//                  </li>
-//               </ol>
-//             </div>
-//           </li>
-
-//           <li className="ic-pri">
-//             <a href="/admin/pricing-plans-list">Pricing Plans</a>
-//           </li>
-
-//           <li className="ic-pri">
-//             {" "}
-//             {/* Reusing icon class for now */}
-//             <a href="/admin/events">Events</a>
-//           </li>
-         
-
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Sidebar;
-
-// import { useState } from "react";
-
-// const Sidebar = () => {
-//   const [expandedMenus, setExpandedMenus] = useState({});
-
-//   const toggleSubmenu = (menuKey) => {
-//     setExpandedMenus((prev) => ({
-//       ...prev,
-//       [menuKey]: !prev[menuKey],
-//     }));
-//   };
-
-//   return (
-//     <div className="pan-lhs ad-menu-main">
-//       <div className="ad-menu">
-//         <ul>
-//           <li className="ic-db">
-//             <a href="/admin/dashboard">Dashboard</a>
-//           </li>
-
-//           {/* USERS */}
-//           <li className="ic-user">
-//             <a
-//               href="#"
-//               onClick={(e) => {
-//                 e.preventDefault();
-//                 toggleSubmenu("users");
-//               }}
-//               className={expandedMenus.users ? "active" : ""}
-//             >
-//               Users
-//             </a>
-
-//             <div style={{ display: expandedMenus.users ? "block" : "none" }}>
-//               <ol>
-//                 <li>
-//                   <a href="/admin/new-user-requests">New User Requests</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/all-user-list">All Users</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/paid-user-list">Paid Users</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/add-new-user">Add new User</a>
-//                 </li>
-//                 <li>
-//                   <a href="/admin/deleted-users">Deleted Users</a>
-//                 </li>
-//                  <li>
-//                   <a href="/admin/issues">Issues</a>
-//                 </li>
-//               </ol>
-//             </div>
-//           </li>
-
-//           {/* PRICING */}
-//           <li className="ic-pri">
-//             <a href="/admin/pricing-plans-list">Pricing Plans</a>
-//           </li>
-
-//           {/* EVENTS */}
-//           <li className="ic-pri">
-//             <a href="/admin/events">Events</a>
-//           </li>
-
-//           {/* BLOGS ✅ NEW */}
-//           <li className="ic-pri">
-//             <a href="/admin/blogs">Blogs</a>
-//           </li>
-
-           
-
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Sidebar;
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, Link } from "react-router-dom";
 
 const Sidebar = () => {
+  const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({});
+
+  useEffect(() => {
+    // Automatically expand the "Users" menu if any sub-route related to users is active
+    const usersRoutes = [
+      "/admin/new-user-requests",
+      "/admin/all-user-list",
+      "/admin/paid-user-list",
+      "/admin/add-new-user",
+      "/admin/deleted-users",
+      "/admin/issues",
+      "/admin/billing-info/",
+      "/admin/new-user/"
+    ];
+    if (usersRoutes.some(route => location.pathname.startsWith(route))) {
+      setExpandedMenus(prev => ({ ...prev, users: true }));
+    }
+  }, [location.pathname]);
 
   const toggleSubmenu = (menuKey) => {
     setExpandedMenus((prev) => ({
@@ -175,81 +29,175 @@ const Sidebar = () => {
     }));
   };
 
-  // Inline icon style
+  const isActive = (path) => location.pathname === path;
+
+  // Inline styles for high visual impact and clarity
   const iconStyle = {
-    marginRight: "8px",
-    fontSize: "16px",
+    marginRight: "10px",
+    fontSize: "18px",
+  };
+
+  const linkBaseStyle = {
+    display: "block",
+    padding: "10px 15px",
+    borderRadius: "8px",
+    textDecoration: "none",
+    transition: "all 0.2s ease-in-out",
+    marginBottom: "4px",
+    fontSize: "14px"
+  };
+
+  const activeLinkStyle = {
+    ...linkBaseStyle,
+    backgroundColor: "#e8f0fe", // Light blue background
+    color: "#1a73e8", // Google-style blue
+    fontWeight: "600",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+  };
+
+  const normalLinkStyle = {
+    ...linkBaseStyle,
+    color: "#5f6368", // Neutral gray
   };
 
   return (
     <div className="pan-lhs ad-menu-main">
-      <div className="ad-menu">
-        <ul>
-          <li style={{ marginBottom: "10px" }}>
-            <a href="/admin/dashboard">
+      <div className="ad-menu" style={{ padding: "15px" }}>
+        <ul className="list-unstyled">
+          <li>
+            <Link 
+              to="/admin/dashboard" 
+              style={isActive("/admin/dashboard") ? activeLinkStyle : normalLinkStyle}
+            >
               <span style={iconStyle}>🏠</span> Dashboard
-            </a>
+            </Link>
           </li>
 
-          {/* USERS */}
-          <li style={{ marginBottom: "10px" }}>
+          {/* USERS GROUP */}
+          <li>
             <a
               href="#"
               onClick={(e) => {
                 e.preventDefault();
                 toggleSubmenu("users");
               }}
-              style={{ fontWeight: expandedMenus.users ? "bold" : "normal" }}
+              style={{
+                ...normalLinkStyle,
+                color: expandedMenus.users ? "#1a73e8" : "#5f6368",
+                fontWeight: expandedMenus.users ? "600" : "normal"
+              }}
             >
               <span style={iconStyle}>👤</span> Users
+              <i 
+                className="fa fa-angle-right float-end" 
+                style={{ 
+                  marginTop: "4px",
+                  transition: "transform 0.3s ease",
+                  transform: expandedMenus.users ? "rotate(90deg)" : "rotate(0deg)"
+                }}
+              ></i>
             </a>
 
-            <div style={{ display: expandedMenus.users ? "block" : "none", marginLeft: "20px" }}>
-              <ol>
+            <div 
+              style={{ 
+                display: expandedMenus.users ? "block" : "none", 
+                marginLeft: "20px", 
+                borderLeft: "2px solid #e8eaed",
+                marginTop: "2px",
+                marginBottom: "10px"
+              }}
+            >
+              <ul className="list-unstyled" style={{ paddingLeft: "10px" }}>
                 <li>
-                  <a href="/admin/new-user-requests">New User Requests</a>
+                  <Link 
+                    to="/admin/new-user-requests" 
+                    style={isActive("/admin/new-user-requests") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    New User Requests
+                  </Link>
                 </li>
                 <li>
-                  <a href="/admin/all-user-list">All Users</a>
+                  <Link 
+                    to="/admin/all-user-list" 
+                    style={isActive("/admin/all-user-list") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    All Users
+                  </Link>
                 </li>
                 <li>
-                  <a href="/admin/paid-user-list">Paid Users</a>
+                  <Link 
+                    to="/admin/paid-user-list" 
+                    style={isActive("/admin/paid-user-list") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    Paid Users
+                  </Link>
                 </li>
                 <li>
-                  <a href="/admin/add-new-user">Add new User</a>
+                  <Link 
+                    to="/admin/add-new-user" 
+                    style={isActive("/admin/add-new-user") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    Add new User
+                  </Link>
                 </li>
                 <li>
-                  <a href="/admin/deleted-users">Deleted Users</a>
+                  <Link 
+                    to="/admin/deleted-users" 
+                    style={isActive("/admin/deleted-users") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    Deleted Users
+                  </Link>
                 </li>
                 <li>
-                  <a href="/admin/issues">Issues</a>
+                  <Link 
+                    to="/admin/issues" 
+                    style={isActive("/admin/issues") ? activeLinkStyle : normalLinkStyle}
+                  >
+                    Issues
+                  </Link>
                 </li>
-              </ol>
+              </ul>
             </div>
           </li>
 
           {/* PRICING */}
-          <li style={{ marginBottom: "10px" }}>
-            <a href="/admin/pricing-plans-list">
+          <li>
+            <Link 
+              to="/admin/pricing-plans-list" 
+              style={isActive("/admin/pricing-plans-list") ? activeLinkStyle : normalLinkStyle}
+            >
               <span style={iconStyle}>💳</span> Pricing Plans
-            </a>
+            </Link>
           </li>
 
           {/* EVENTS */}
-          <li style={{ marginBottom: "10px" }}>
-            <a href="/admin/events">
+          <li>
+            <Link 
+              to="/admin/events" 
+              style={isActive("/admin/events") ? activeLinkStyle : normalLinkStyle}
+            >
               <span style={iconStyle}>📅</span> Events
-            </a>
+            </Link>
           </li>
 
           {/* BLOGS */}
-          <li style={{ marginBottom: "10px" }}>
-            <a href="/admin/blogs">
+          <li>
+            <Link 
+              to="/admin/blogs" 
+              style={isActive("/admin/blogs") ? activeLinkStyle : normalLinkStyle}
+            >
               <span style={iconStyle}>📝</span> Blogs
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
+
+      <style jsx>{`
+        .ad-menu a:hover {
+          background-color: #f1f3f4;
+          color: #1a73e8;
+        }
+      `}</style>
     </div>
   );
 };

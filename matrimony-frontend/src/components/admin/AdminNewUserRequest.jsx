@@ -4,7 +4,7 @@ import NewLayout from "./layout/NewLayout";
 import {
   approveNewUser,
   getNewRequestedUsers,
-    deleteUserById, 
+  deleteUserById,
 } from "../../api/service/adminServices";
 import { useNavigate } from "react-router-dom";
 export default function AdminNewUserRequest() {
@@ -137,28 +137,28 @@ export default function AdminNewUserRequest() {
       });
     }
   };
-const handleDeleteUser = async (userId) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this user? This action cannot be undone."
-  );
+  const handleDeleteUser = async (userId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this user? This action cannot be undone."
+    );
 
-  if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-  try {
-    // Call your API to delete the user
-    const response = await deleteUserById(userId); // <-- you need to create this API in adminServices
+    try {
+      // Call your API to delete the user
+      const response = await deleteUserById(userId); // <-- you need to create this API in adminServices
 
-    if (response.status === 200) {
-      // Remove the user from the state to update the table
-      setFilteredUsers((prev) => prev.filter((user) => user._id !== userId));
-      setUsers((prev) => prev.filter((user) => user._id !== userId));
-      alert(response.data.message || "User deleted successfully!");
+      if (response.status === 200) {
+        // Remove the user from the state to update the table
+        setFilteredUsers((prev) => prev.filter((user) => user._id !== userId));
+        setUsers((prev) => prev.filter((user) => user._id !== userId));
+        alert(response.data.message || "User deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user. Please try again.");
     }
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    alert("Failed to delete user. Please try again.");
-  }
-};
+  };
   // Pagination component
   const Pagination = () => {
     const pageNumbers = [];
@@ -770,26 +770,49 @@ const handleDeleteUser = async (userId) => {
                                   ></i>
                                 </button>
                                 <ul className="dropdown-menu">
+                                 <li>
+                                      <a
+                                        className="dropdown-item"
+                                        href="#"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setOpenDropdown(null);
+                                          handleEdit(user._id);
+                                        }}
+                                      >
+                                        <i className="fa fa-edit me-2"></i>Edit
+                                      </a>
+                                    </li>
+
                                   <li>
-                                    <a className="dropdown-item" href="#">
-                                      Edit
+                                    <a
+                                      className="dropdown-item"
+                                      onClick={() => handleDeleteUser(user._id)}
+                                    >
+                                      Delete
                                     </a>
                                   </li>
-                                 <li>
-  <a
-    className="dropdown-item"
-    onClick={() => handleDeleteUser(user._id)}
-  >
-    Delete
-  </a>
-</li>
                                   <li>
-                                    <a className="dropdown-item" href="#">
+                                    <a
+                                      className="dropdown-item"
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        navigate(`/admin/billing-info/${user._id}`);
+                                      }}
+                                    >
                                       Billing info
                                     </a>
                                   </li>
                                   <li>
-                                    <a className="dropdown-item" href="#">
+                                    <a
+                                      className="dropdown-item"
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        navigate(`/admin/new-user/${user._id}`);
+                                      }}
+                                    >
                                       View more details
                                     </a>
                                   </li>

@@ -16,10 +16,11 @@ import AdminPaymentGateWay from "./components/admin/AdminPaymentGateWay";
 import AdminSettings from "./components/admin/AdminSettings";
 import AdminEvents from "./components/admin/AdminEvents";
 import AdminLayout from "./components/mainLayouts/AdminLayout";
-import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminDeletedUsers from "./components/admin/AdminDeletedUsers";
+import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminViewNewUser from "./components/admin/AdminViewNewUser";
 import AdminIssues from "./components/admin/AdminIssues";
+import AdminBillingInfo from "./components/admin/AdminBillingInfo";
 
 import AdminBlogs from "./components/admin/AdminBlogs";
 
@@ -110,6 +111,14 @@ function App() {
             </AdminLayout>
           }
         />
+        <Route
+          path="/admin/edit-user/:id"
+          element={
+            <AdminLayout>
+              <AdminEditUser />
+            </AdminLayout>
+          }
+        />
 
         <Route
           path="/admin/seo-meta-tags"
@@ -188,6 +197,14 @@ function App() {
   element={
     <AdminLayout>
       <AdminViewNewUser />
+    </AdminLayout>
+  }
+/>
+<Route
+  path="/admin/billing-info/:id"
+  element={
+    <AdminLayout>
+      <AdminBillingInfo />
     </AdminLayout>
   }
 />

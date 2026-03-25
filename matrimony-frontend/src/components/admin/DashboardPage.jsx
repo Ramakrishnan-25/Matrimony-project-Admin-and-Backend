@@ -20,6 +20,7 @@ const DashboardPage = () => {
 
 
   const [newUserCount, setNewUserCount] = useState(0);
+  const [newRequestedUsers, setNewRequestedUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [paidUsers, setPaidUsers] = useState([]);
@@ -27,24 +28,24 @@ const DashboardPage = () => {
   const [yearlyEarningsUSD, setYearlyEarningsUSD] = useState(0);
 
   const renewalUsers = paidUsers.filter(user =>
-  user.paymentDetails?.some(payment => {
+    user.paymentDetails?.some(payment => {
 
-    const expiry = new Date(payment.subscriptionValidTo);
-    const today = new Date();
+      const expiry = new Date(payment.subscriptionValidTo);
+      const today = new Date();
 
-    const diff =
-      (expiry - today) / (1000 * 60 * 60 * 24);
+      const diff =
+        (expiry - today) / (1000 * 60 * 60 * 24);
 
-    return diff <= 7 && diff >= 0;
-  })
-);
+      return diff <= 7 && diff >= 0;
+    })
+  );
 
 
   const activeSubscribedUsers = paidUsers.filter(user =>
-  user.paymentDetails?.some(
-    payment => payment.subscriptionStatus === "Active"
-  )
-);
+    user.paymentDetails?.some(
+      payment => payment.subscriptionStatus === "Active"
+    )
+  );
 
   useEffect(() => {
     if (paidUsers.length === 0) return;
@@ -69,7 +70,10 @@ const DashboardPage = () => {
     const fetchUsers = async () => {
       const allRes = await getAllUserData();
       if (allRes?.data?.success) {
-        setAllUsers(allRes.data.data);
+        const sortedUsers = allRes.data.data.sort((a, b) =>
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setAllUsers(sortedUsers);
       }
 
       const paidRes = await getPaidUserData();
@@ -108,6 +112,11 @@ const DashboardPage = () => {
 
         if (response?.data?.success) {
           const users = response.data.data;
+          
+          const sortedUsers = users.sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setNewRequestedUsers(sortedUsers);
 
           const today = new Date().toISOString().split("T")[0];
 
@@ -346,56 +355,37 @@ const DashboardPage = () => {
 
     if (earningsReceiptCanvas) {
 
-      const USD_RATE = 83; // INR → USD
       const currentYear = new Date().getFullYear();
-
       const monthlyTotalsINR = new Array(12).fill(0);
 
       paidUsers.forEach(user => {
         user.paymentDetails?.forEach(payment => {
-
           if (
             payment.subscriptionStatus === "Active" &&
             payment.subscriptionTransactionDate
           ) {
-
-            const paymentDate =
-              new Date(payment.subscriptionTransactionDate);
-
-            // ✅ Prevent Invalid Date issue
+            const paymentDate = new Date(payment.subscriptionTransactionDate);
             if (isNaN(paymentDate)) return;
 
-            const paymentYear =
-              paymentDate.getFullYear();
-
-            const paymentMonth =
-              paymentDate.getMonth();
+            const paymentYear = paymentDate.getFullYear();
+            const paymentMonth = paymentDate.getMonth();
 
             if (paymentYear === currentYear) {
-              monthlyTotalsINR[paymentMonth] +=
-                Number(payment.subscriptionAmount || 0);
+              monthlyTotalsINR[paymentMonth] += Number(payment.subscriptionAmount || 0);
             }
           }
         });
       });
 
       // ✅ Convert INR → USD
-      const monthlyTotalsUSD =
-        monthlyTotalsINR.map(
-          amount => amount / USD_RATE
-        );
+      const USD_RATE = 83; // INR → USD
+      const monthlyTotalsUSD = monthlyTotalsINR.map(amount => amount / USD_RATE);
 
       // ✅ Calculate total current year INR
-      const totalYearINR = monthlyTotalsINR.reduce(
-        (sum, amount) => sum + amount,
-        0
-      );
-
-      // ✅ Convert to USD
-      const totalYearUSD = totalYearINR / USD_RATE;
+      const totalYearINR = monthlyTotalsINR.reduce((sum, amount) => sum + amount, 0);
 
       // ✅ Store in state
-      setYearlyEarningsUSD(totalYearUSD);
+      setYearlyEarningsUSD(totalYearINR / USD_RATE);
 
       chartsRef.current.monthlyEarningsChart =
         new Chart(earningsReceiptCanvas, {
@@ -419,6 +409,7 @@ const DashboardPage = () => {
             scales: {
               y: {
                 beginAtZero: true,
+                max: 10000,
               },
             },
             plugins: {
@@ -516,7 +507,7 @@ const DashboardPage = () => {
     };
   }, [plans, paidUsers]);
 
-  
+
 
 
   return (
@@ -576,19 +567,19 @@ const DashboardPage = () => {
           <div className="col-md-3">
             <div className="box-com box-qui box-lig box-new-user">
               <h2>Subscribed Users</h2>
-            <span className="bnum">{activeSubscribedUsers.length}</span>
-            <div className="users-cir-thum-hori">
-  {activeSubscribedUsers.slice(0, 8).map((user, index) => (
-    <span key={index}>
-      <img
-        src={user.profileImage || profImages}
-        data-bs-toggle="tooltip"
-        title={user.userName}
-        alt={user.userName}
-      />
-    </span>
-  ))}
-</div>
+              <span className="bnum">{activeSubscribedUsers.length}</span>
+              <div className="users-cir-thum-hori">
+                {activeSubscribedUsers.slice(0, 8).map((user, index) => (
+                  <span key={index}>
+                    <img
+                      src={user.profileImage || profImages}
+                      data-bs-toggle="tooltip"
+                      title={user.userName}
+                      alt={user.userName}
+                    />
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="box-com box-qui box-lig ali-cen">
               <h3>
@@ -970,37 +961,46 @@ const DashboardPage = () => {
                 </tbody> */}
 
                 <tbody>
-  {allUsers.slice(0,6).map((user,index)=>(
-    <tr key={user._id}>
-      <td>{index+1}</td>
+                  {newRequestedUsers.slice(0, 6).map((user, index) => {
+                    const activePlan = user.paymentDetails?.find(p => p.subscriptionStatus === "Active");
+                    const planFromList = plans.find(p => p.name === activePlan?.subscriptionType);
+                    
+                    return (
+                      <tr key={user._id}>
+                        <td>{index + 1}</td>
 
-      <td>
-        <div className="prof-table-thum">
-          <div className="pro">
-            <img src={user.profileImage || profImages} alt="" />
-          </div>
+                        <td>
+                          <div className="prof-table-thum">
+                            <div className="pro">
+                              <img src={user.profileImage || profImages} alt="" />
+                            </div>
 
-          <div className="pro-info">
-            <h5>{user.userName}</h5>
-            <p>{user.userEmail}</p>
-          </div>
-        </div>
-      </td>
+                            <div className="pro-info">
+                              <h5>{user.userName}</h5>
+                              <p>{user.userEmail}</p>
+                            </div>
+                          </div>
+                        </td>
 
-      <td>{user.userMobile}</td>
+                        <td>{user.userMobile}</td>
 
-      <td>
-        {new Date(user.createdAt).toLocaleDateString()}
-      </td>
+                        <td>
+                          {new Date(user.createdAt).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </td>
 
-      <td>
-        <span className="hig-grn">
-          {user.isAnySubscriptionTaken ? "Premium" : "Free"}
-        </span>
-      </td>
-    </tr>
-  ))}
-</tbody>
+                        <td>
+                          <span className={user.isAnySubscriptionTaken ? "hig-grn" : "hig-red"}>
+                            {planFromList ? planFromList.name : (user.isAnySubscriptionTaken ? "Premium" : "Free")}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
 
 
               </table>
@@ -1039,288 +1039,52 @@ const DashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Ashley emyy</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Elizabeth Taylor</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Angelina Jolie</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>4</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Olivia mia</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>5</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Jennifer</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>6</td>
-                    <td>
-                      <div className="prof-table-thum">
-                        <div className="pro">
-                          <img src={profImages} alt="" />
-                        </div>
-                        <div className="pro-info">
-                          <h5>Emmy jack</h5>
-                          <p>ashleyipsum@gmail.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>01 321-998-91</td>
-                    <td>
-                      <span className="hig-red">22, Feb 2024</span>
-                    </td>
-                    <td>
-                      <span className="hig-grn">Premium</span>
-                    </td>
-                    <td>
-                      <div className="dropdown">
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          data-bs-toggle="dropdown"
-                        >
-                          <i
-                            className="fa fa-ellipsis-h"
-                            aria-hidden="true"
-                          ></i>
-                        </button>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              More details
-                            </a>
-                          </li>
-                          <li>
-                            <a className="dropdown-item" href="#">
-                              View profile
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
+                  {renewalUsers.length > 0 ? (
+                    renewalUsers.slice(0, 6).map((user, index) => {
+                      const expiringPayment = user.paymentDetails?.find(payment => {
+                        const expiry = new Date(payment.subscriptionValidTo);
+                        const today = new Date();
+                        const diff = (expiry - today) / (1000 * 60 * 60 * 24);
+                        return diff <= 7 && diff >= 0;
+                      });
+
+                      return (
+                        <tr key={user._id}>
+                          <td>{index + 1}</td>
+                          <td>
+                            <div className="prof-table-thum">
+                              <div className="pro">
+                                <img src={user.profileImage || profImages} alt="" />
+                              </div>
+                              <div className="pro-info">
+                                <h5>{user.userName}</h5>
+                                <p>{user.userEmail}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td>{user.userMobile}</td>
+                          <td>
+                            <span className="hig-red">
+                              {expiringPayment ? new Date(expiringPayment.subscriptionValidTo).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              }) : "N/A"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="hig-grn">
+                              {expiringPayment?.subscriptionType || "Premium"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="text-center">No renewal reminders</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

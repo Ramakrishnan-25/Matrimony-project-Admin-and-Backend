@@ -31,39 +31,166 @@ export default function AdminViewNewUser() {
     // 🔥 PROFILE COMPLETION
     // =========================
     const calculateProfileCompletion = (user) => {
+        if (!user) return 0;
+
+        // Define all profile fields grouped by section (matching client-side logic)
+        const profileFields = {
+            basic: [
+                "profileCreatedFor",
+                "userName",
+                "dateOfBirth",
+                "bodyType",
+                "physicalStatus",
+                "complexion",
+                "height",
+                "weight",
+                "maritalStatus",
+                "eatingHabits",
+                "drinkingHabits",
+                "smokingHabits",
+                "motherTongue",
+                "caste",
+            ],
+            married: [
+                "marriedMonthYear",
+                "livingTogetherPeriod",
+                "childStatus",
+                "numberOfChildren",
+            ],
+            divorced: ["divorcedMonthYear", "reasonForDivorce"],
+            family: [
+                "fathersName",
+                "mothersName",
+                "fathersOccupation",
+                "fathersProfession",
+                "mothersOccupation",
+                "fathersNative",
+                "mothersNative",
+                "familyValue",
+                "familyType",
+                "familyStatus",
+                "residenceType",
+                "numberOfBrothers",
+                "numberOfSisters",
+            ],
+            religious: [
+                "religion",
+                "denomination",
+                "church",
+                "churchActivity",
+                "pastorsName",
+                "spirituality",
+                "religiousDetail",
+            ],
+            professional: [
+                "education",
+                "additionalEducation",
+                "college",
+                "educationDetail",
+                "employmentType",
+                "occupation",
+                "position",
+                "companyName",
+                "annualIncome",
+            ],
+            contact: [
+                "userMobile",
+                "alternateMobile",
+                "landlineNumber",
+                "userEmail",
+                "currentAddress",
+                "permanentAddress",
+                "city",
+                "state",
+                "pincode",
+                "citizenOf",
+                "contactPersonName",
+                "relationship",
+            ],
+            lifestyle: [
+                "hobbies",
+                "interests",
+                "music",
+                "favouriteReads",
+                "favouriteCuisines",
+                "sportsActivities",
+                "dressStyles",
+            ],
+            partners: [
+                "partnerAgeFrom",
+                "partnerAgeTo",
+                "partnerHeight",
+                "partnerMaritalStatus",
+                "partnerMotherTongue",
+                "partnerCaste",
+                "partnerPhysicalStatus",
+                "partnerEatingHabits",
+                "partnerDrinkingHabits",
+                "partnerSmokingHabits",
+                "partnerDenomination",
+                "partnerSpirituality",
+                "partnerEducation",
+                "partnerEmploymentType",
+                "partnerOccupation",
+                "partnerAnnualIncome",
+                "partnerCountry",
+                "partnerState",
+                "partnerDistrict",
+            ],
+            profile: ["profileImage", "aboutMe"],
+        };
+
+        const isFieldFilled = (fieldValue) => {
+            return (
+                fieldValue !== null &&
+                fieldValue !== undefined &&
+                fieldValue !== "" &&
+                (!Array.isArray(fieldValue) || fieldValue.length > 0)
+            );
+        };
+
+        let filledCount = 0;
         let totalFields = 0;
-        let filledFields = 0;
 
-        const skipFields = [
-            "_id",
-            "__v",
-            "createdAt",
-            "updatedAt",
-            "paymentDetails",
-            "profileViews",
-            "additionalImages",
-            "deletedAt",
-            "isDeleted"
-        ];
-
-        Object.keys(user).forEach((key) => {
-            if (skipFields.includes(key)) return;
-
+        // Basic
+        profileFields.basic.forEach((field) => {
             totalFields++;
-            const value = user[key];
-
-            if (Array.isArray(value)) {
-                if (value.length > 0 && value.some((v) => v !== "")) {
-                    filledFields++;
-                }
-            } else if (value !== null && value !== undefined && value !== "") {
-                filledFields++;
-            }
+            if (isFieldFilled(user[field])) filledCount++;
         });
 
-        return totalFields > 0
-            ? Math.round((filledFields / totalFields) * 100)
-            : 0;
+        // Married fields logic
+        if (
+            user.maritalStatus &&
+            user.maritalStatus !== "Never Married" &&
+            user.maritalStatus !== "Unmarried"
+        ) {
+            profileFields.married.forEach((field) => {
+                totalFields++;
+                if (isFieldFilled(user[field])) filledCount++;
+            });
+        }
+
+        // Divorced logic
+        if (
+            user.maritalStatus === "Divorced" ||
+            user.maritalStatus === "Awaiting Divorce"
+        ) {
+            profileFields.divorced.forEach((field) => {
+                totalFields++;
+                if (isFieldFilled(user[field])) filledCount++;
+            });
+        }
+
+        // Others
+        const otherSections = ["family", "religious", "professional", "contact", "lifestyle", "partners", "profile"];
+        otherSections.forEach(section => {
+            profileFields[section].forEach((field) => {
+                totalFields++;
+                if (isFieldFilled(user[field])) filledCount++;
+            });
+        });
+
+        return totalFields > 0 ? Math.round((filledCount / totalFields) * 100) : 0;
     };
 
     // =========================

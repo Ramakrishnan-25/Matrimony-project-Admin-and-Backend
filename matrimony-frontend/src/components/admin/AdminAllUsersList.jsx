@@ -128,33 +128,33 @@ const AdminAllUsersList = () => {
   };
 
   const handleDelete = async (id) => {
-  const confirmDelete = window.confirm("Are you sure you want to delete?");
-  if (!confirmDelete) return;
+    const confirmDelete = window.confirm("Are you sure you want to delete?");
+    if (!confirmDelete) return;
 
-  try {
-    const response = await deleteUserById(id);
+    try {
+      const response = await deleteUserById(id);
 
-    if (response.status === 200) {
-      alert("User moved to Deleted Users");
+      if (response.status === 200) {
+        alert("User moved to Deleted Users");
 
-      // Remove from UI instantly
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user._id !== id)
-      );
+        // Remove from UI instantly
+        setUsers((prevUsers) =>
+          prevUsers.filter((user) => user._id !== id)
+        );
 
-      setFilteredUsers((prevUsers) =>
-        prevUsers.filter((user) => user._id !== id)
-      );
+        setFilteredUsers((prevUsers) =>
+          prevUsers.filter((user) => user._id !== id)
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Delete failed");
     }
-  } catch (error) {
-    console.error(error);
-    alert("Delete failed");
-  }
-};
+  };
 
-const handleEdit = (id) => {
-  navigate(`/admin/edit-user/${id}`);
-};
+  const handleEdit = (id) => {
+    navigate(`/admin/edit-user/${id}`);
+  };
 
 
   // Pagination component
@@ -172,7 +172,7 @@ const handleEdit = (id) => {
     for (let i = startPage; i <= endPage; i++) {
       pageNumbers.push(i);
     }
-    
+
 
     return (
       <nav
@@ -238,9 +238,8 @@ const handleEdit = (id) => {
           )}
 
           <li
-            className={`page-item ${
-              currentPage === totalPages ? "disabled" : ""
-            }`}
+            className={`page-item ${currentPage === totalPages ? "disabled" : ""
+              }`}
           >
             <button
               className="page-link"
@@ -431,7 +430,7 @@ const handleEdit = (id) => {
                                         "flex";
                                     }}
                                   />
-                                ) :     <div
+                                ) : <div
                                   className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
                                   style={{
                                     width: "40px",
@@ -445,7 +444,7 @@ const handleEdit = (id) => {
                                 >
                                   {getInitials(user.userName)}
                                 </div>}
-                            
+
                                 <div>
                                   <h6 className="mb-0 fw-bold">
                                     {user.userName}
@@ -543,35 +542,35 @@ const handleEdit = (id) => {
                                       minWidth: "160px",
                                     }}
                                   >
-                                  <li>
-  <a
-    className="dropdown-item"
-    href="#"
-    onClick={(e) => {
-      e.preventDefault();
-      setOpenDropdown(null);
-      handleEdit(user._id);
-    }}
-  >
-    <i className="fa fa-edit me-2"></i>Edit
-  </a>
-</li>
+                                    <li>
+                                      <a
+                                        className="dropdown-item"
+                                        href="#"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setOpenDropdown(null);
+                                          handleEdit(user._id);
+                                        }}
+                                      >
+                                        <i className="fa fa-edit me-2"></i>Edit
+                                      </a>
+                                    </li>
 
 
- <li>
-  <a
-    className="dropdown-item text-danger"
-    href="#"
-    onClick={(e) => {
-      e.preventDefault();
-      setOpenDropdown(null);
-      handleDelete(user._id);
-    }}
-  >
-    <i className="fa fa-trash me-2"></i>
-    Delete
-  </a>
-</li>
+                                    <li>
+                                      <a
+                                        className="dropdown-item text-danger"
+                                        href="#"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          setOpenDropdown(null);
+                                          handleDelete(user._id);
+                                        }}
+                                      >
+                                        <i className="fa fa-trash me-2"></i>
+                                        Delete
+                                      </a>
+                                    </li>
 
                                     <li>
                                       <a
@@ -580,7 +579,7 @@ const handleEdit = (id) => {
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setOpenDropdown(null);
-                                          // Add your billing logic here
+                                          navigate(`/admin/billing-info/${user._id}`);
                                         }}
                                       >
                                         <i className="fa fa-credit-card me-2"></i>
@@ -594,7 +593,7 @@ const handleEdit = (id) => {
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setOpenDropdown(null);
-                                          // Add your view details logic here
+                                          navigate(`/admin/new-user/${user._id}`);
                                         }}
                                       >
                                         <i className="fa fa-info-circle me-2"></i>
@@ -608,7 +607,7 @@ const handleEdit = (id) => {
                                         onClick={(e) => {
                                           e.preventDefault();
                                           setOpenDropdown(null);
-                                          // Add your view profile logic here
+                                          navigate(`/admin/new-user/${user._id}`);
                                         }}
                                       >
                                         <i className="fa fa-user me-2"></i>View
