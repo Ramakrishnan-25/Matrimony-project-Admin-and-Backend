@@ -140,6 +140,11 @@ export const deleteUserById = async (userId) => {
   return await adminInstance.delete(`/delete-user/${userId}`);
 };
 
+// Remove User Subscription
+export const removeUserSubscription = async (userId) => {
+  return await adminInstance.put(`/remove-subscription/${userId}`);
+};
+
 // 🔥 OPTIONAL – Restore User
 export const restoreUserById = async (userId) => {
   return await adminInstance.put(`/restore-user/${userId}`);

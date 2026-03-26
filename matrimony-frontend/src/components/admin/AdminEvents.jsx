@@ -345,7 +345,7 @@ const AdminEvents = () => {
                   <table className="table table-hover">
                     <thead>
                       <tr>
-                        <th className="border-0">NO</th>
+                        <th className="border-0">S.NO</th>
                         <th className="border-0">Event Name</th>
                         <th className="border-0">Image</th>
                         <th className="border-0">Date</th>

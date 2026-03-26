@@ -316,7 +316,7 @@ const AdminPricingPlans = () => {
                   <table className="table table-hover">
                     <thead>
                       <tr>
-                        <th className="border-0">NO</th>
+                        <th className="border-0">S.NO</th>
                         <th className="border-0">PLAN NAME</th>
                         <th className="border-0">PRICE</th>
                         <th className="border-0">DURATION</th>

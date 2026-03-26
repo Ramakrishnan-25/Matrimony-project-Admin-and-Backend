@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import NewLayout from "./layout/NewLayout";
-import { getPaidUserData } from "../../api/service/adminServices";
+import { getPaidUserData, removeUserSubscription } from "../../api/service/adminServices";
 import { useNavigate } from "react-router-dom";
 
 const AdminFreeUserList = () => {
@@ -97,6 +97,23 @@ const AdminFreeUserList = () => {
     return new Date(dateString).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   };
 
+  const handleRemove = async (userId) => {
+    const confirmRemove = window.confirm("Are you sure you want to remove this user?");
+    if (!confirmRemove) return;
+
+    try {
+      const response = await removeUserSubscription(userId);
+      if (response.status === 200) {
+        alert("User subscription removed successfully");
+        setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
+        setFilteredUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
+      }
+    } catch (error) {
+      console.error("Error removing subscription:", error);
+      alert("Failed to remove subscription");
+    }
+  };
+
   const Pagination = () => (
     <nav className="d-flex justify-content-center mt-5">
       <ul className="pagination pagination-sm shadow-sm rounded-pill overflow-hidden">
@@ -181,7 +198,7 @@ const AdminFreeUserList = () => {
                 <table className="table table-hover align-middle mb-0">
                   <thead className="bg-light">
                     <tr>
-                      <th className="ps-4 py-3 text-muted small fw-bold text-center" style={{width: "60px"}}>#</th>
+                      <th className="ps-4 py-3 text-muted small fw-bold text-center" style={{width: "60px"}}>S.No</th>
                       <th className="py-3 text-muted small fw-bold cursor-pointer" onClick={() => handleSort("userName")}>MEMBER {sortField === "userName" && (sortDirection === "asc" ? "↑" : "↓")}</th>
                       <th className="py-3 text-muted small fw-bold d-none d-md-table-cell">CONTACT</th>
                       <th className="py-3 text-muted small fw-bold">PLAN DETAILS</th>
@@ -241,7 +258,7 @@ const AdminFreeUserList = () => {
                                   <li><button className="dropdown-item py-2" onClick={() => navigate(`/admin/billing-info/${user._id}`)}><i className="fa fa-credit-card me-2 text-info"></i>Billing Info</button></li>
                                   <li><button className="dropdown-item py-2" onClick={() => navigate(`/admin/new-user/${user._id}`)}><i className="fa fa-user me-2 text-success"></i>View Details</button></li>
                                   <li className="dropdown-divider"></li>
-                                  <li><button className="dropdown-item py-2 text-danger"><i className="fa fa-trash me-2"></i>Remove</button></li>
+                                  <li><button className="dropdown-item py-2 text-danger" onClick={() => { setOpenDropdown(null); handleRemove(user._id); }}><i className="fa fa-trash me-2"></i>Remove</button></li>
                                 </ul>
                               )}
                             </div>
@@ -270,7 +287,7 @@ const AdminFreeUserList = () => {
         {!loading && totalPages > 1 && <Pagination />}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .table thead th { border: none; letter-spacing: 0.05em; }
         .table tbody tr:hover { background-color: #fbfcfe; transition: background 0.2s ease; }
         .cursor-pointer { cursor: pointer; }

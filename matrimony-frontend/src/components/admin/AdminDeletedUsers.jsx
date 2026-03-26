@@ -107,7 +107,7 @@ const AdminDeletedUsers = () => {
                 <table className="table table-hover">
                   <thead>
                     <tr>
-                      <th>NO</th>
+                      <th>S.NO</th>
                       <th>PROFILE</th>
                       <th className="d-none d-md-table-cell">PHONE</th>
                       <th className="d-none d-lg-table-cell">CITY</th>

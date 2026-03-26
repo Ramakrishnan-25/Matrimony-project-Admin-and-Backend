@@ -367,7 +367,7 @@ const AdminAllUsersList = () => {
                 <table className="table table-hover">
                   <thead>
                     <tr>
-                      <th className="text-center border-0">NO</th>
+                      <th className="text-center border-0">S.NO</th>
                       <th
                         className="cursor-pointer border-0"
                         onClick={() => handleSort("userName")}
@@ -586,7 +586,7 @@ const AdminAllUsersList = () => {
                                         Billing info
                                       </a>
                                     </li>
-                                    <li>
+                                    {/* <li>
                                       <a
                                         className="dropdown-item"
                                         href="#"
@@ -599,7 +599,7 @@ const AdminAllUsersList = () => {
                                         <i className="fa fa-info-circle me-2"></i>
                                         View details
                                       </a>
-                                    </li>
+                                    </li> */}
                                     <li>
                                       <a
                                         className="dropdown-item"

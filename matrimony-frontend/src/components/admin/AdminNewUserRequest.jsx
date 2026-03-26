@@ -596,7 +596,7 @@ export default function AdminNewUserRequest() {
                 <table style={tableStyles.table}>
                   <thead style={tableStyles.tableHeader}>
                     <tr>
-                      <th style={tableStyles.th}>No</th>
+                      <th style={tableStyles.th}>S.No</th>
                       <th style={tableStyles.th}>Profile Details</th>
                       <th style={tableStyles.th}>Gender</th>
                       <th style={tableStyles.th}>Request Date & Time</th>
@@ -770,7 +770,7 @@ export default function AdminNewUserRequest() {
                                   ></i>
                                 </button>
                                 <ul className="dropdown-menu">
-                                 <li>
+                                 {/* <li>
                                       <a
                                         className="dropdown-item"
                                         href="#"
@@ -782,7 +782,7 @@ export default function AdminNewUserRequest() {
                                       >
                                         <i className="fa fa-edit me-2"></i>Edit
                                       </a>
-                                    </li>
+                                    </li> */}
 
                                   <li>
                                     <a
@@ -816,12 +816,12 @@ export default function AdminNewUserRequest() {
                                       View more details
                                     </a>
                                   </li>
-                                  <a
+                                  {/* <a
                                     className="dropdown-item"
                                     onClick={() => navigate(`/admin/new-user/${user._id}`)}
                                   >
                                     View profile
-                                  </a>
+                                  </a> */}
                                 </ul>
                               </div>
                             </td>
