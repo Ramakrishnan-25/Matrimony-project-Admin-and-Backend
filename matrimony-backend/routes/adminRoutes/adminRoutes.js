@@ -63,6 +63,7 @@ adminRoutes.post("/verify-admin", adminController.verifyAdmin);
 /* =========================
    USER MANAGEMENT
 ========================== */
+adminRoutes.put("/remove-subscription/:id", adminController.removeUserSubscription);
 adminRoutes.get("/get-all-users", adminController.getAllUsersData);
 adminRoutes.get("/get-user/:id", adminController.getUserById);
 adminRoutes.put("/update-user/:id", adminController.updateUser);

@@ -558,6 +558,44 @@ const deleteUser = async (req, res) => {
 };
 
 /* =========================
+   REMOVE USER SUBSCRIPTION
+========================== */
+const removeUserSubscription = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isAnySubscriptionTaken: false,
+          paymentDetails: [],
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User subscription data removed successfully",
+    });
+  } catch (err) {
+    console.error("Error removing user subscription:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+/* =========================
    GET USER BY ID
 ========================== */
 const getUserById = async (req, res) => {
@@ -701,6 +739,7 @@ module.exports = {
   verifyAdmin,
   getAllUsersData,
   deleteUser,
+  removeUserSubscription,
   getUserById,
   restoreUser,
   updateUser,
