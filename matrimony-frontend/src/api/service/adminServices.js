@@ -145,6 +145,16 @@ export const removeUserSubscription = async (userId) => {
   return await adminInstance.put(`/remove-subscription/${userId}`);
 };
 
+// Upgrade User Plan Manually
+export const upgradeUserPlan = async (userId, planData) => {
+  return await adminInstance.put(`/upgrade-plan/${userId}`, { plan: planData });
+};
+
+// Email User Invoice
+export const emailUserInvoice = async (userId) => {
+  return await adminInstance.post(`/email-invoice/${userId}`);
+};
+
 // 🔥 OPTIONAL – Restore User
 export const restoreUserById = async (userId) => {
   return await adminInstance.put(`/restore-user/${userId}`);

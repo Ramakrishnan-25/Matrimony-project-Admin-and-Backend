@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NewLayout from "./layout/NewLayout";
-import { getUserById } from "../../api/service/adminServices";
+import { getUserById, emailUserInvoice } from "../../api/service/adminServices";
 import profImages from "/assets/images/profiles/1.jpg";
 
 const AdminBillingInfo = () => {
@@ -9,6 +9,28 @@ const AdminBillingInfo = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [emailing, setEmailing] = useState(false);
+
+  const handleEmailInvoice = async () => {
+    if (!user || !user.isAnySubscriptionTaken) {
+      alert("No active subscription found to email.");
+      return;
+    }
+    setEmailing(true);
+    try {
+      const response = await emailUserInvoice(id);
+      if (response.status === 200) {
+        alert("Invoice emailed successfully!");
+      } else {
+        alert("Failed to email invoice.");
+      }
+    } catch (error) {
+      console.error("Error emailing invoice:", error);
+      alert("An error occurred while emailing the invoice.");
+    } finally {
+      setEmailing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -124,9 +146,22 @@ const AdminBillingInfo = () => {
               {/* Billing Details */}
               <div className="col-md-8">
                 <div className="card border-0 bg-white h-100 p-0 m-0">
-                  <div className="card-header bg-transparent border-0 d-flex align-items-center px-0 mb-3">
-                    <h5 className="fw-bold mb-0">Subscription History</h5>
-                  </div>
+                  <div className="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0 mb-3">
+  <h5 className="fw-bold mb-0">
+    {user.isAnySubscriptionTaken
+      ? "Subscription History"
+      : "No Subscription Found"}
+  </h5>
+
+  <button
+    className="btn btn-sm btn-primary rounded-pill px-4"
+    onClick={() => navigate(`/admin/user-plan/${user._id}`)}
+  >
+    {user.isAnySubscriptionTaken
+      ? "Upgrade This Plan Manually"
+      : "Add Plan Manually"}
+  </button>
+</div>
                   
                   {user.paymentDetails && user.paymentDetails.length > 0 ? (
                     <div className="table-responsive">
@@ -181,7 +216,7 @@ const AdminBillingInfo = () => {
                       </div>
                       <h5 className="text-muted fw-bold">No Records Found</h5>
                       <p className="text-muted small">Subscription and payment details will appear here once the user makes a purchase.</p>
-                      <button className="btn btn-sm btn-primary rounded-pill px-4 mt-2" onClick={() => navigate(`/admin/edit-user/${user._id}`)}>
+                      <button className="btn btn-sm btn-primary rounded-pill px-4 mt-2" onClick={() => navigate(`/admin/user-plan/${user._id}`)}>
                         Add Plan Manually
                       </button>
                     </div>
@@ -192,8 +227,16 @@ const AdminBillingInfo = () => {
                     <button className="btn btn-light rounded-pill btn-sm flex-fill shadow-sm" onClick={() => window.print()}>
                       <i className="fa fa-print me-2"></i>Print Statement
                     </button>
-                    <button className="btn btn-light rounded-pill btn-sm flex-fill shadow-sm">
-                      <i className="fa fa-envelope me-2"></i>Email Invoice
+                    <button 
+                      className="btn btn-light rounded-pill btn-sm flex-fill shadow-sm"
+                      onClick={handleEmailInvoice}
+                      disabled={emailing || !user.isAnySubscriptionTaken}
+                    >
+                      {emailing ? (
+                        <><i className="fa fa-spinner fa-spin me-2"></i>Sending...</>
+                      ) : (
+                        <><i className="fa fa-envelope me-2"></i>Email Invoice</>
+                      )}
                     </button>
                   </div>
                 </div>

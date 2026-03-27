@@ -21,6 +21,7 @@ import AdminEditUser from "./components/admin/AdminEditUser";
 import AdminViewNewUser from "./components/admin/AdminViewNewUser";
 import AdminIssues from "./components/admin/AdminIssues";
 import AdminBillingInfo from "./components/admin/AdminBillingInfo";
+import AdminUserPlan from "./components/admin/AdminUserPlan";
 
 import AdminBlogs from "./components/admin/AdminBlogs";
 
@@ -205,6 +206,14 @@ function App() {
   element={
     <AdminLayout>
       <AdminBillingInfo />
+    </AdminLayout>
+  }
+/>
+<Route
+  path="/admin/user-plan/:id"
+  element={
+    <AdminLayout>
+      <AdminUserPlan />
     </AdminLayout>
   }
 />
