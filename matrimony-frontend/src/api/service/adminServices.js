@@ -170,6 +170,16 @@ export const updateUserById = async (userId, userData) => {
   return await adminInstance.put(`/update-user/${userId}`, userData);
 };
 
+// Verify User ID Proof
+export const verifyIdProof = async (userId, status) => {
+  return await adminInstance.put(`/verify-id-proof/${userId}`, { status });
+};
+
+// Verify Mobile Phone
+export const verifyMobile = async (userId, isVerified) => {
+  return await adminInstance.put(`/verify-mobile/${userId}`, { isVerified });
+};
+
 
 /* =========================
    PLAN MANAGEMENT

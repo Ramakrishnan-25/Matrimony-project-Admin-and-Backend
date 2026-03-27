@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NewLayout from "./layout/NewLayout";
-import { getUserById } from "../../api/service/adminServices";
+import {
+    getUserById,
+    verifyIdProof,
+    verifyMobile,
+} from "../../api/service/adminServices";
 
 export default function AdminViewNewUser() {
     const { id } = useParams();
@@ -228,6 +232,35 @@ export default function AdminViewNewUser() {
         const diff = Date.now() - birthDate.getTime();
         const ageDt = new Date(diff);
         return Math.abs(ageDt.getUTCFullYear() - 1970);
+    };
+
+    const handleVerifyId = async (status) => {
+        if (!window.confirm(`Are you sure you want to ${status.toLowerCase()} this ID proof?`)) return;
+        try {
+            const res = await verifyIdProof(id, status);
+            if (res.status === 200) {
+                alert(`ID Proof ${status} successfully!`);
+                setUser({ ...user, idVerificationStatus: status });
+            }
+        } catch (error) {
+            console.error("Error verifying ID:", error);
+            alert("Error updating status.");
+        }
+    };
+
+    const handleVerifyMobile = async (isVerified) => {
+        const action = isVerified ? "verify" : "unverify";
+        if (!window.confirm(`Are you sure you want to ${action} this mobile number?`)) return;
+        try {
+            const res = await verifyMobile(id, isVerified);
+            if (res.status === 200) {
+                alert(`Mobile phone ${isVerified ? "verified" : "unverified"} successfully!`);
+                setUser({ ...user, isPhoneVerified: isVerified });
+            }
+        } catch (error) {
+            console.error("Error verifying mobile:", error);
+            alert("Error updating status.");
+        }
     };
 
     return (
@@ -471,6 +504,106 @@ export default function AdminViewNewUser() {
 </div>
 
 <hr />
+
+                    {/* ================= ID VERIFICATION ================= */}
+                    <div className="mb-4">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h5 className="fw-bold m-0">Mobile Number Verification</h5>
+                            <span className={`badge rounded-pill ${
+                                user.isPhoneVerified ? 'bg-success' : 'bg-danger'
+                            }`}>
+                                {user.isPhoneVerified ? 'Verified' : 'Unverified'}
+                            </span>
+                        </div>
+                        <div className="card border p-3 bg-light">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p className="mb-0"><strong>Mobile Number:</strong> {formatMobile(user.userMobile)}</p>
+                                    <p className="mb-0 text-muted small">Verify after manual check or OTP.</p>
+                                </div>
+                                <button
+                                    className={`btn ${user.isPhoneVerified ? 'btn-outline-danger' : 'btn-success'}`}
+                                    onClick={() => handleVerifyMobile(!user.isPhoneVerified)}
+                                >
+                                    <i className={`fa ${user.isPhoneVerified ? 'fa-times' : 'fa-check'} me-1`}></i>
+                                    {user.isPhoneVerified ? 'Unverify Mobile' : 'Verify Mobile'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    {/* ================= ID VERIFICATION ================= */}
+                    <div className="mb-4">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h5 className="fw-bold m-0">Government ID Verification</h5>
+                            <span className={`badge rounded-pill ${
+                                user.idVerificationStatus === 'Verified' ? 'bg-success' :
+                                user.idVerificationStatus === 'Rejected' ? 'bg-danger' :
+                                user.idVerificationStatus === 'Uploaded' ? 'bg-warning text-dark' : 'bg-secondary'
+                            }`}>
+                                {user.idVerificationStatus || 'Pending'}
+                            </span>
+                        </div>
+
+                        {user.idProofDocument ? (
+                            <div className="card border p-3 bg-light">
+                                <div className="row align-items-center">
+                                    <div className="col-md-6">
+                                        <p className="mb-2"><strong>ID Document:</strong></p>
+                                        <a
+                                            href={user.idProofDocument}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-outline-primary btn-sm"
+                                        >
+                                            <i className="fa fa-eye me-2"></i> View Document
+                                        </a>
+                                    </div>
+                                    <div className="col-md-6 text-md-end mt-3 mt-md-0">
+                                        {user.idVerificationStatus !== 'Verified' && (
+                                            <button
+                                                className="btn btn-success me-2"
+                                                onClick={() => handleVerifyId('Verified')}
+                                            >
+                                                <i className="fa fa-check me-1"></i> Approve
+                                            </button>
+                                        )}
+                                        {user.idVerificationStatus !== 'Rejected' && (
+                                            <button
+                                                className="btn btn-danger"
+                                                onClick={() => handleVerifyId('Rejected')}
+                                            >
+                                                <i className="fa fa-times me-1"></i> Reject
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                {user.idProofDocument.toLowerCase().endsWith('.pdf') ? (
+                                    <div className="mt-3 text-center border p-4 bg-white rounded">
+                                        <i className="fa fa-file-pdf-o text-danger font-large mb-2" style={{fontSize: '48px'}}></i>
+                                        <p className="m-0 text-muted">PDF Document Attached</p>
+                                    </div>
+                                ) : (
+                                    <div className="mt-3 text-center">
+                                        <img
+                                            src={user.idProofDocument}
+                                            alt="ID Preview"
+                                            className="img-fluid rounded border shadow-sm"
+                                            style={{ maxHeight: '300px' }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="alert alert-info py-2">
+                                <i className="fa fa-info-circle me-2"></i> No ID proof uploaded yet.
+                            </div>
+                        )}
+                    </div>
+
+                    <hr />
 
                     {/* ================= SUBSCRIPTION ================= */}
                     <h5 className="fw-bold mb-3">Subscription Details</h5>
