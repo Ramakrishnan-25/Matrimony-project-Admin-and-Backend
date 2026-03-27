@@ -558,44 +558,6 @@ const deleteUser = async (req, res) => {
 };
 
 /* =========================
-   REMOVE USER SUBSCRIPTION
-========================== */
-const removeUserSubscription = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          isAnySubscriptionTaken: false,
-          paymentDetails: [],
-        },
-      },
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "User subscription data removed successfully",
-    });
-  } catch (err) {
-    console.error("Error removing user subscription:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-/* =========================
    GET USER BY ID
 ========================== */
 const getUserById = async (req, res) => {
@@ -728,109 +690,43 @@ const getDeletedUsers = async (req, res) => {
   }
 };
 
-/* =========================
-   EMAIL INVOICE
-========================== */
-const emailInvoice = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await userModel.findById(id);
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
 
-    if (!user.isAnySubscriptionTaken || !user.paymentDetails || user.paymentDetails.length === 0) {
-      return res.status(400).json({ success: false, message: "No active subscription found to email" });
-    }
-
-    const latestPayment = user.paymentDetails[user.paymentDetails.length - 1];
-
-    const sendEmail = require("../../utils/nodeMailerMessages");
-    await sendEmail(
-      user.userEmail,
-      "Your Subscription Invoice from AgapeVows",
-      "invoiceEmail",
-      [user.userName, latestPayment]
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Invoice emailed successfully",
-    });
-  } catch (err) {
-    console.error("Error emailing invoice:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
 
 /* =========================
-   UPGRADE USER PLAN (MANUAL)
+   VERIFY ID PROOF
 ========================== */
-const upgradeUserPlan = async (req, res) => {
+const verifyIdProof = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { plan } = req.body;
+    const { userId } = req.params;
+    const { status } = req.body; // "Verified" or "Rejected"
 
-    if (!plan || !plan.name) {
-      return res.status(400).json({ success: false, message: "Plan data is required" });
+    if (!["Verified", "Rejected"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Must be 'Verified' or 'Rejected'.",
+      });
     }
 
-    const validFrom = new Date();
-    const validTo = new Date(validFrom);
-
-    if (plan.durationType === "days") {
-      validTo.setDate(validTo.getDate() + Number(plan.duration));
-    } else if (plan.durationType === "years") {
-      validTo.setFullYear(validTo.getFullYear() + Number(plan.duration));
-    } else {
-      // default months
-      validTo.setMonth(validTo.getMonth() + Number(plan.duration));
-    }
-
-    const newPayment = {
-      subscriptionValidFrom: validFrom,
-      subscriptionValidTo: validTo,
-      subscriptionType: plan.name,
-      subscriptionAmount: plan.price,
-      subscriptionStatus: "Active",
-      subscriptionTransactionDate: validFrom,
-      subscriptionTransactionId: plan.paymentId || "Admin-Manual",
-      subscriptionOrderId: "Admin-" + Date.now(),
-      maxProfiles: plan.maxProfiles,
-      profilesViewedCount: 0,
-      dailyLimit: plan.dailyLimit,
-      dailyViewedCount: 0,
-      lastViewDate: validFrom,
-      canViewProfiles: plan.canViewProfiles,
-      viewContactDetails: plan.viewContactDetails,
-      sendInterestRequest: plan.sendInterestRequest,
-      startChat: plan.startChat,
-    };
-
-    const updatedUser = await userModel.findByIdAndUpdate(
-      id,
-      {
-        $set: { isAnySubscriptionTaken: true },
-        $push: { paymentDetails: newPayment },
-      },
+    const userData = await userModel.findByIdAndUpdate(
+      userId,
+      { idVerificationStatus: status },
       { new: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Plan upgraded successfully",
-      data: updatedUser,
+      message: `ID Proof ${status.toLowerCase()} successfully`,
     });
   } catch (err) {
-    console.error("Error upgrading plan:", err);
+    console.error("Error verifying ID proof:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -838,6 +734,36 @@ const upgradeUserPlan = async (req, res) => {
   }
 };
 
+const verifyMobile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+
+    const userData = await userModel.findByIdAndUpdate(
+      userId,
+      { isPhoneVerified: isVerified },
+      { new: true }
+    );
+
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Mobile phone ${isVerified ? "verified" : "unverified"} successfully`,
+    });
+  } catch (err) {
+    console.error("Error verifying mobile phone:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 module.exports = {
   getPaidUsersData,
@@ -847,13 +773,10 @@ module.exports = {
   verifyAdmin,
   getAllUsersData,
   deleteUser,
-  removeUserSubscription,
   getUserById,
   restoreUser,
   updateUser,
   getDeletedUsers,
-  upgradeUserPlan,
-  emailInvoice,
-
-
+  verifyIdProof,
+  verifyMobile,
 };

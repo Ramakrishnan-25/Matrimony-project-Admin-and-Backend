@@ -3,7 +3,6 @@ const nodemailer = require("nodemailer");
 
 const templates = {
   verifyEmail: require("./emailTemplates/emailVerification"),
-  invoiceEmail: require("./emailTemplates/invoiceEmail"),
 };
 
 const transporter = nodemailer.createTransport({

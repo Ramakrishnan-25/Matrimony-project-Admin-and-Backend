@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema(
       aboutMe: { type: String },
 
       isEmailVerified: { type: Boolean, default: false },
+      isPhoneVerified: { type: Boolean, default: false },
       isApproved: { type: Boolean, default: false },
       isProfileCompleted: { type: Boolean, default: false },
 
@@ -29,6 +30,16 @@ const userSchema = new mongoose.Schema(
          type: String,
          enum: ["Public", "Private"],
          default: "Private",
+      },
+
+      /* =========================
+         ID VERIFICATION
+      ========================== */
+      idProofDocument: { type: String, default: "" },
+      idVerificationStatus: {
+         type: String,
+         enum: ["Pending", "Uploaded", "Verified", "Rejected"],
+         default: "Pending",
       },
 
       /* =========================

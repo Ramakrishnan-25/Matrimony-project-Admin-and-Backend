@@ -248,7 +248,22 @@ const completeProfileData = async (req, res) => {
     if (files?.profileImage?.[0]) {
       const profile = await cloudinary.uploader.upload(
         files.profileImage[0].path,
-        { folder: `matrimony/users/${userId}/profileImage` }
+        { 
+          folder: `matrimony/users/${userId}/profileImage`,
+          transformation: [
+            {
+              overlay: { font_family: "Arial", font_size: 150, font_weight: "bold", text: "AgapeVows" }
+            },
+            {
+              flags: "layer_apply",
+              gravity: "center",
+              color: "white",
+              opacity: 40,
+              width: 0.8,
+              crop: "fit"
+            }
+          ]
+        }
       );
       updates.profileImage = profile.secure_url;
       fs.unlinkSync(files.profileImage[0].path);
@@ -300,6 +315,19 @@ const completeProfileData = async (req, res) => {
         files.additionalImages.map((file) =>
           cloudinary.uploader.upload(file.path, {
             folder: `matrimony/users/${userId}/additionalImages`,
+            transformation: [
+              {
+                overlay: { font_family: "Arial", font_size: 150, font_weight: "bold", text: "AgapeVows" }
+              },
+              {
+                flags: "layer_apply",
+                gravity: "center",
+                color: "white",
+                opacity: 40,
+                width: 0.8,
+                crop: "fit"
+              }
+            ]
           })
         )
       );
@@ -2216,6 +2244,54 @@ const getBlockedProfiles = async (req, res) => {
   }
 };
 
+const uploadIdProof = async (req, res) => {
+  console.log("RECEIVED uploadIdProof request for userId:", req.params.userId);
+  try {
+    const { userId } = req.params;
+    const file = req.file;
+    console.log("File detected:", file ? file.originalname : "NONE");
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: `matrimony/users/${userId}/idProof`,
+      resource_type: "auto", // Handle PDF or Image
+    });
+
+    // Update user record
+    await userModel.findByIdAndUpdate(userId, {
+      idProofDocument: result.secure_url,
+      idVerificationStatus: "Uploaded",
+    });
+
+    // Remove local file
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "ID Proof uploaded successfully. It is now pending admin approval.",
+      data: {
+        idProofDocument: result.secure_url,
+        idVerificationStatus: "Uploaded",
+      },
+    });
+  } catch (err) {
+    console.error("Error uploading ID proof:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   getWhoViewedYou,
   getShortListedProfileData,
@@ -2244,5 +2320,6 @@ module.exports = {
   getUserCounts,
   blockUser,
   unblockUser,
-  getBlockedProfiles
+  getBlockedProfiles,
+  uploadIdProof
 };

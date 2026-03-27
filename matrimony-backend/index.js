@@ -10,6 +10,9 @@ const signUpRoute = require("./routes/userRoutes/userSignUpRoute");
 const userAuthRoutes = require("./routes/userRoutes/userAuthRoute");
 const adminAuthRoutes = require("./routes/adminRoutes/adminRoutes");
 const initializeSocket = require("./utils/socketConnection"); // ✅ your socket handler
+const userAuthController = require("./controller/userController/userAuthController");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 
 const port = PORT || 3001;
 const server = http.createServer(app);
@@ -52,6 +55,9 @@ app.use(cors(corsOptions));
 app.use("/user", signUpRoute);
 app.use("/user-auth", userAuthRoutes);
 app.use("/admin", adminAuthRoutes);
+
+// TEST ROUTE DIRECTLY IN INDEX.JS
+app.post("/test-upload-id-proof/:userId", upload.single("idProof"), userAuthController.uploadIdProof);
 
 
 app.disable("x-powered-by");

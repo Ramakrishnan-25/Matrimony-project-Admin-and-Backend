@@ -103,6 +103,13 @@ const upload = multer({ storage, fileFilter });
 
 // ======================== ROUTES ======================== //
 
+// ID PROOF UPLOAD (MOVED TO TOP TO PREVENT 404)
+userAuthRoutes.post(
+  "/upload-id-proof/:userId",
+  upload.single("idProof"),
+  userAuthController.uploadIdProof
+);
+
 userAuthRoutes.get("/get-user-info/:userId", userAuthController.getUserInformation);
 userAuthRoutes.get("/get-user-profile/:userId", userAuthController.getUserProfileImage);
 userAuthRoutes.get("/get-all-user-profile/:userId", userAuthController.getAllUserProfileData);
@@ -146,6 +153,8 @@ userAuthRoutes.post(
 
 // DELETE Additional Images
 userAuthRoutes.post("/delete-additional-images/:userId", userAuthController.deleteAdditionalImages);
+
+// UPDATED BELOW
 
 // PLAN & CHAT
 userAuthRoutes.post("/save-plan-details/:userId", userAuthController.savePlanDetails);
