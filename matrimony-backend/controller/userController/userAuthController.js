@@ -28,21 +28,32 @@ cloudinary.config({
   api_secret: CLOUDINARY_API_SECRET,
 });
 
-
-
+const AGAPE_WATERMARK_CONFIG = [
+  {
+    overlay: {
+      font_family: "Arial",
+      font_size: 80,
+      font_weight: "bold",
+      text: "AgapeVows",
+      stroke: "stroke"
+    },
+    color: "#ffffff",
+    border: "5px_solid_black"
+  },
+  {
+    flags: "layer_apply",
+    gravity: "south_east",
+    opacity: 65,
+    x: 20,
+    y: 20
+  }
+];
 
 
 const generateOrderId = () => {
   const randomNumber = Math.floor(100000 + Math.random() * 900000);
   return `AGV${randomNumber}`;
 };
-
-
-// const generateOrderId = () => {
-//   const randomNumber = Math.floor(100000 + Math.random() * 900000);
-//   return `AGV${randomNumber}`; // ✅ changed from AGPW to AGV
-// };
-
 
 
 const getUserInformation = async (req, res) => {
@@ -248,21 +259,9 @@ const completeProfileData = async (req, res) => {
     if (files?.profileImage?.[0]) {
       const profile = await cloudinary.uploader.upload(
         files.profileImage[0].path,
-        { 
+        {
           folder: `matrimony/users/${userId}/profileImage`,
-          transformation: [
-            {
-              overlay: { font_family: "Arial", font_size: 150, font_weight: "bold", text: "AgapeVows" }
-            },
-            {
-              flags: "layer_apply",
-              gravity: "center",
-              color: "white",
-              opacity: 40,
-              width: 0.8,
-              crop: "fit"
-            }
-          ]
+          transformation: AGAPE_WATERMARK_CONFIG
         }
       );
       updates.profileImage = profile.secure_url;
@@ -315,19 +314,7 @@ const completeProfileData = async (req, res) => {
         files.additionalImages.map((file) =>
           cloudinary.uploader.upload(file.path, {
             folder: `matrimony/users/${userId}/additionalImages`,
-            transformation: [
-              {
-                overlay: { font_family: "Arial", font_size: 150, font_weight: "bold", text: "AgapeVows" }
-              },
-              {
-                flags: "layer_apply",
-                gravity: "center",
-                color: "white",
-                opacity: 40,
-                width: 0.8,
-                crop: "fit"
-              }
-            ]
+            transformation: AGAPE_WATERMARK_CONFIG
           })
         )
       );
@@ -542,161 +529,6 @@ const getAllUserProfileDataHome = async (req, res) => {
   }
 };
 
-// const getProfileMoreInformation = async (req, res) => {
-//   try {
-//     const { profileId } = req.params;
-//     const { viewerId } = req.query; // Check for viewerId in query params
-
-//     const profileData = await userModel.findById(
-//       { _id: profileId },
-//       { userPassword: 0 }
-//     );
-
-//     if (!profileData) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Profile not found",
-//       });
-//     }
-
-//     // Logic to update view count (Unique Views) and check limitations
-//     if (viewerId && viewerId !== profileId) {
-//       if (!profileData.profileViews) {
-//         profileData.profileViews = [];
-//       }
-
-//       const viewerData = await userModel.findById(viewerId);
-//       if (viewerData && viewerData.paymentDetails) {
-//        const now = new Date();
-
-// const activePlans = viewerData.paymentDetails.filter(
-//   (p) =>
-//     p.subscriptionStatus === "Active" &&
-//     new Date(p.subscriptionValidTo) > now
-// );
-
-
-
-//         if (activePlans.length > 0) {
-//           activePlans.sort((a, b) => new Date(b.subscriptionValidFrom) - new Date(a.subscriptionValidFrom));
-//           const activePlan = activePlans[0];
-
-//           const planIdx = viewerData.paymentDetails.findIndex(p => p._id && p._id.toString() === activePlan._id.toString());
-//           if (planIdx !== -1) {
-//              const actualPlan = viewerData.paymentDetails[planIdx];
-
-//              const today = process.env.TZ ? new Date(new Date().toLocaleString("en-US", { timeZone: process.env.TZ })) : new Date();
-//              const todayString = today.toISOString().split("T")[0];
-
-//              let lastViewStr = actualPlan.lastViewDate ? new Date(actualPlan.lastViewDate).toISOString().split("T")[0] : "";
-//              if (lastViewStr !== todayString) {
-//                await userModel.updateOne(
-//                  { _id: viewerId, "paymentDetails._id": actualPlan._id },
-//                  {
-//                    $set: {
-//                      "paymentDetails.$.dailyViewedCount": 0,
-//                      "paymentDetails.$.lastViewDate": today
-//                    }
-//                  }
-//                );
-//                viewerData.paymentDetails[planIdx].dailyViewedCount = 0;
-//                viewerData.paymentDetails[planIdx].lastViewDate = today;
-//              }
-
-//              let maxP = actualPlan.maxProfiles;
-//              let dailyL = actualPlan.dailyLimit;
-
-//              // Retroactive fallback for older plan subscriptions
-//              if (maxP === undefined || dailyL === undefined) {
-//                 const planModel = require("../../model/admin/planModel");
-//                 const actualPlanDef = await planModel.findOne({ name: actualPlan.subscriptionType });
-//                 if (actualPlanDef) {
-//                    maxP = actualPlanDef.maxProfiles;
-//                    dailyL = actualPlanDef.dailyLimit;
-
-//                    viewerData.paymentDetails[planIdx].maxProfiles = maxP;
-//                    viewerData.paymentDetails[planIdx].dailyLimit = dailyL;
-//                 }
-//              }
-
-//              const isUnlimited = (val) => val === "Unlimited" || val === "unlimited" || parseInt(val) >= 999999;
-
-//              const parsedMaxProfiles = parseInt(maxP);
-//              const parsedDailyLimit = parseInt(dailyL);
-
-//              const currentProfileCount = viewerData.paymentDetails[planIdx].profilesViewedCount || 0;
-//              const currentDailyCount = viewerData.paymentDetails[planIdx].dailyViewedCount || 0;
-
-//              if (!isUnlimited(maxP) && !isNaN(parsedMaxProfiles) && currentProfileCount >= parsedMaxProfiles) {
-//                 return res.status(403).json({ success: false, message: "Your limit has been reached." });
-//              }
-//              if (!isUnlimited(dailyL) && !isNaN(parsedDailyLimit) && currentDailyCount >= parsedDailyLimit) {
-//                 return res.status(403).json({ success: false, message: "Your limit has been reached." });
-//              }
-
-//              console.log(`[Limit Tracking] Updating Database for Viewer: ${viewerId}, target plan: ${actualPlan._id}`);
-//              // Always increment metrics on every view
-//              const updateResult = await userModel.updateOne(
-//                { _id: viewerId, "paymentDetails._id": actualPlan._id },
-//                {
-//                  $inc: {
-//                    "paymentDetails.$.profilesViewedCount": 1,
-//                    "paymentDetails.$.dailyViewedCount": 1
-//                  }
-//                }
-//              );
-//              console.log(`[Limit Tracking] MongoDB Update Result: `, updateResult);
-
-//              if (!profileData.profileViews.includes(viewerId)) {
-//                 profileData.profileViews.push(viewerId);
-//                 await profileData.save();
-//              }
-//           }
-//         } else {
-//            if (!profileData.profileViews.includes(viewerId)) {
-//              profileData.profileViews.push(viewerId);
-//              await profileData.save();
-//            }
-//         }
-//       } else {
-//          if (!profileData.profileViews.includes(viewerId)) {
-//            profileData.profileViews.push(viewerId);
-//            await profileData.save();
-//          }
-//       }
-//     }
-
-//     // Check interest status
-//     let interestStatus = null;
-//     if (viewerId) {
-//       const interest = await interestModel.findOne({
-//         senderId: viewerId,
-//         targetUserId: profileId
-//       });
-//       if (interest) {
-//         interestStatus = interest.status;
-//       }
-//     }
-
-//     // Add interestStatus to the response data
-//     const responseData = {
-//       ...profileData.toObject(),
-//       interestStatus
-//     };
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Profile data fetched successfully",
-//       data: responseData,
-//     });
-//   } catch (err) {
-//     console.log("Error in getting the more details of the profile", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
 
 
 
@@ -2179,11 +2011,11 @@ const blockUser = async (req, res) => {
     }
 
     await userModel.findByIdAndUpdate(userId, {
-      $addToSet: { 
-        blockedUsers: { 
-          user: blockedUserId, 
-          blockedAt: new Date() 
-        } 
+      $addToSet: {
+        blockedUsers: {
+          user: blockedUserId,
+          blockedAt: new Date()
+        }
       }
     });
 
