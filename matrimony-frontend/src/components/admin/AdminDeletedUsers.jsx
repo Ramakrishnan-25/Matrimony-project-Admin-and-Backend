@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import NewLayout from "./layout/NewLayout";
-import { getDeletedUsers, restoreUserById } from "../../api/service/adminServices";
+import { getDeletedUsers, restoreUserById, permanentDeleteUserById } from "../../api/service/adminServices";
 import { useNavigate } from "react-router-dom";
 
 const AdminDeletedUsers = () => {
@@ -55,6 +55,26 @@ const AdminDeletedUsers = () => {
       }
     } catch (error) {
       alert("Restore failed");
+    }
+  };
+
+  const handlePermanentDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to PERMANENTLY delete this user? This action cannot be undone and all user data will be removed from the database."
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const response = await permanentDeleteUserById(id);
+      if (response.status === 200) {
+        alert("User permanently deleted from backend");
+
+        setUsers((prev) => prev.filter((u) => u._id !== id));
+        setFilteredUsers((prev) => prev.filter((u) => u._id !== id));
+      }
+    } catch (error) {
+      console.error("Permanent delete failed:", error);
+      alert("Permanent delete failed");
     }
   };
 
@@ -155,13 +175,22 @@ const AdminDeletedUsers = () => {
                               {user.city}
                             </td>
                             <td className="text-center">
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleRestore(user._id)}
-                              >
-                                <i className="fa fa-undo me-1"></i>
-                                Restore
-                              </button>
+                              <div className="d-flex gap-2 justify-content-center">
+                                <button
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => handleRestore(user._id)}
+                                >
+                                  <i className="fa fa-undo me-1"></i>
+                                  Restore
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handlePermanentDelete(user._id)}
+                                >
+                                  <i className="fa fa-trash me-1"></i>
+                                  Delete
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );

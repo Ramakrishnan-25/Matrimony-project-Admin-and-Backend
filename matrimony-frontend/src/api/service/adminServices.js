@@ -140,6 +140,11 @@ export const deleteUserById = async (userId) => {
   return await adminInstance.delete(`/delete-user/${userId}`);
 };
 
+// Permanent Delete User
+export const permanentDeleteUserById = async (userId) => {
+  return await adminInstance.delete(`/permanent-delete-user/${userId}`);
+};
+
 // Remove User Subscription
 export const removeUserSubscription = async (userId) => {
   return await adminInstance.put(`/remove-subscription/${userId}`);
