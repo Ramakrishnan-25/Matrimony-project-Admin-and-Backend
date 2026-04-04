@@ -765,6 +765,39 @@ const verifyMobile = async (req, res) => {
   }
 };
 
+/* =========================
+   PERMANENT DELETE USER
+========================== */
+const permanentDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedUser = await userModel.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // You might want to delete other related data here as well, 
+    // e.g., chats, interests, etc. if they are in separate collections.
+    // For now, focusing on the main user data as requested.
+
+    return res.status(200).json({
+      success: true,
+      message: "User permanently deleted from backend",
+    });
+  } catch (err) {
+    console.error("Error in permanentDeleteUser:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   getPaidUsersData,
   approveNewUser,
@@ -779,4 +812,5 @@ module.exports = {
   getDeletedUsers,
   verifyIdProof,
   verifyMobile,
+  permanentDeleteUser,
 };

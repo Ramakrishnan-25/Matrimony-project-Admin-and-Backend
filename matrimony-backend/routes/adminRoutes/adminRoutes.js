@@ -80,6 +80,7 @@ adminRoutes.put(
 adminRoutes.get("/paid-users-data", adminController.getPaidUsersData);
 
 adminRoutes.delete("/delete-user/:id", adminController.deleteUser);
+adminRoutes.delete("/permanent-delete-user/:id", adminController.permanentDeleteUser);
 adminRoutes.put("/restore-user/:id", adminController.restoreUser);
 adminRoutes.get("/deleted-users", adminController.getDeletedUsers);
 
