@@ -118,6 +118,8 @@ const getMyChatList = async (req, res) => {
           userName: 1,
           profileImage: 1,
           blockedUsers: 1,
+          paymentDetails: 1,
+          isAnySubscriptionTaken: 1,
         });
 
         // Skip if either user has blocked the other
@@ -143,6 +145,8 @@ const getMyChatList = async (req, res) => {
             _id: otherUser?._id || otherParticipantId,
             name: otherUser?.userName || "Unknown",
             profileImage: otherUser?.profileImage || null,
+            paymentDetails: otherUser?.paymentDetails || [],
+            isAnySubscriptionTaken: otherUser?.isAnySubscriptionTaken || false,
           },
           lastMessage: lastMessage
             ? {

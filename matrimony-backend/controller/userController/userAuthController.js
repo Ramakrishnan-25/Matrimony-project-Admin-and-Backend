@@ -886,7 +886,7 @@ const getInterestedProfileRequest = async (req, res) => {
 
     const senderDetails = await userModel.find(
       { _id: { $in: senderIds } },
-      "userName profileImage city age gender jobType height"
+      "userName profileImage city age gender jobType height paymentDetails isAnySubscriptionTaken"
     );
 
     const mergedData = interests.map((interest) => {
@@ -1412,7 +1412,16 @@ const getShortListedProfileData = async (req, res) => {
 
     const profiles = await userModel.find(
       { _id: { $in: shortListData.profiles } },
-      { userName: 1, profileImage: 1, age: 1, city: 1, height: 1, degree: 1 }
+      {
+        userName: 1,
+        profileImage: 1,
+        age: 1,
+        city: 1,
+        height: 1,
+        degree: 1,
+        paymentDetails: 1,
+        isAnySubscriptionTaken: 1,
+      }
     );
 
     return res.status(200).json({
@@ -1978,6 +1987,8 @@ const getWhoViewedYou = async (req, res) => {
         city: 1,
         height: 1,
         degree: 1,
+        paymentDetails: 1,
+        isAnySubscriptionTaken: 1,
       }
     );
 
@@ -2048,7 +2059,7 @@ const getBlockedProfiles = async (req, res) => {
 
     const user = await userModel.findById(userId).populate({
       path: "blockedUsers.user",
-      select: "userName profileImage city age height degree"
+      select: "userName profileImage city age height degree paymentDetails isAnySubscriptionTaken"
     });
 
     if (!user) {
