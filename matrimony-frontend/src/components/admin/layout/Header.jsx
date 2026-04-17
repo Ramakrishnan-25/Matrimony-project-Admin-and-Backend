@@ -101,7 +101,7 @@ const handleLogout = () => {
                           </a>
                         </li>
                         <li>
-                          <a href="admin-enquiry.html" className="waves-effect">
+                          <a href="/admin/enquiries" className="waves-effect">
                             <i
                               className="fa fa-envelope-o"
                               aria-hidden="true"

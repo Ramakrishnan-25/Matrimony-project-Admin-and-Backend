@@ -53,12 +53,16 @@ const MatrimonyAdminLogin = () => {
 
       }
     } catch (err) {
-      if (err.response.status === 404) {
-        setError("Email ID not valid");
-      } else if (err.response.status === 401) {
-        setError("Invalid password");
+      if (err.response) {
+        if (err.response.status === 404) {
+          setError("Email ID not valid");
+        } else if (err.response.status === 401) {
+          setError("Invalid password");
+        } else {
+          setError("Something went wrong");
+        }
       } else {
-        setError("Something went wrong");
+        setError("Unable to connect to server. Please check if backend is running.");
       }
     }
   };
@@ -121,7 +125,7 @@ const MatrimonyAdminLogin = () => {
                       <p></p>
                     </div>
                     <div className="form-login">
-                      <div>
+                      <form onSubmit={handleLoginSubmit}>
                         {error && <p style={{ color: "red" }}>{error}</p>}
                         {message && <p style={{ color: "green" }}>{message}</p>}
 
@@ -152,11 +156,10 @@ const MatrimonyAdminLogin = () => {
                         <button
                           type="submit"
                           className="btn btn-primary"
-                          onClick={handleLoginSubmit}
                         >
                           Sign in
                         </button>
-                      </div>
+                      </form>
                     </div>
                   </div>
                   <div

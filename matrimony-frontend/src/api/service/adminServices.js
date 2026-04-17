@@ -330,3 +330,18 @@ export const updateIssue = async (issueId, data) => {
 export const deleteIssue = (id) => {
   return adminInstance.delete(`/delete-issue/${id}`);
 };
+
+
+export const getAllEnquiries = async () => {
+  return await adminInstance.get(`/get-all-enquiries`);
+};
+
+// Delete Enquiry
+export const deleteEnquiry = async (id) => {
+  return await adminInstance.delete(`/delete-enquiry/${id}`);
+};
+
+// Update Enquiry
+export const updateEnquiry = async (id, data) => {
+  return await adminInstance.put(`/update-enquiry/${id}`, data);
+};

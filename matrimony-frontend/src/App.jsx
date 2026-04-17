@@ -24,6 +24,7 @@ import AdminBillingInfo from "./components/admin/AdminBillingInfo";
 import AdminUserPlan from "./components/admin/AdminUserPlan";
 
 import AdminBlogs from "./components/admin/AdminBlogs";
+import AdminEnquiries from "./components/admin/AdminEnquiries";
 
 
 function App() {
@@ -225,6 +226,14 @@ function App() {
     </AdminLayout>
   }
 />
+        <Route
+          path="/admin/enquiries"
+          element={
+            <AdminLayout>
+              <AdminEnquiries />
+            </AdminLayout>
+          }
+        />
       </Routes>
     </Router>
   );

@@ -189,6 +189,16 @@ const Sidebar = () => {
               <span style={iconStyle}>📝</span> Blogs
             </Link>
           </li>
+
+          {/* ENQUIRIES */}
+          <li>
+            <Link 
+              to="/admin/enquiries" 
+              style={isActive("/admin/enquiries") ? activeLinkStyle : normalLinkStyle}
+            >
+              <span style={iconStyle}>✉️</span> Enquiries
+            </Link>
+          </li>
         </ul>
       </div>
 
