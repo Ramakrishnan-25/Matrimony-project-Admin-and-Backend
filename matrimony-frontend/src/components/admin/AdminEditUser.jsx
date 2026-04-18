@@ -1,10 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NewLayout from "./layout/NewLayout";
 import { getUserById, updateUserById } from "../../api/service/adminServices";
 import { Country, State, City } from "country-state-city";
 import BasicInfomation from "./BasicInfomation";
 import profImages from "/assets/images/profiles/1.jpg";
+
+// Define all options outside component to prevent inline array recreation
+const GENDER_OPTIONS = ["Male", "Female", "Other"];
+const PROFILE_CREATED_FOR_OPTIONS = ["Self", "Son", "Daughter", "Brother", "Sister", "Friend"];
+const MARITAL_STATUS_OPTIONS = ["Never Married", "Divorced", "Awaiting Divorce", "Widow/Widower"];
+const HEIGHT_OPTIONS = ["4ft", "4ft 1in", "4ft 2in", "4ft 3in", "4ft 4in", "4ft 5in", "4ft 6in", "4ft 7in", "4ft 8in", "4ft 9in", "4ft 10in", "4ft 11in", "5ft", "5ft 1in", "5ft 2in", "5ft 3in", "5ft 4in", "5ft 5in", "5ft 6in", "5ft 7in", "5ft 8in", "5ft 9in", "5ft 10in", "5ft 11in", "6ft", "6ft 1in", "6ft 2in", "6ft 3in", "6ft 4in", "6ft 5in", "6ft 6in", "6ft 7in", "6ft 8in", "6ft 9in", "6ft 10in", "6ft 11in", "7ft"];
+const BODY_TYPE_OPTIONS = ["Average", "Slim", "Athletic", "Heavy"];
+const COMPLEXION_OPTIONS = ["Fair", "Very Fair", "Wheatish", "Dark"];
+const EATING_HABITS_OPTIONS = ["Vegetarian", "Non-Vegetarian", "Eggetarian"];
+const FAMILY_VALUE_OPTIONS = ["Traditional", "Moderate", "Liberal"];
+const FAMILY_TYPE_OPTIONS = ["Joint", "Nuclear"];
+const FAMILY_STATUS_OPTIONS = ["Middle Class", "Upper Middle Class", "Rich", "Affluent"];
+const EMPLOYMENT_TYPE_OPTIONS = ["Government", "Private", "Business", "Self Employed", "Not Working"];
+const YES_NO_OPTIONS = ["No", "Yes", "Occasionally"];
+
+// Memoized InputField component - prevents re-render on parent state changes
+const InputField = React.memo(({ label, name, type = "text", options = null, col = "6", value, onChange }) => (
+  <div className={`col-md-${col}`}>
+    <label className="form-label small fw-bold text-muted">{label}</label>
+    {options ? (
+      <select className="form-select" name={name} value={value || ""} onChange={onChange}>
+        <option value="">Select {label}</option>
+        {options.map((opt, i) => (
+          <option key={i} value={opt}>{opt}</option>
+        ))}
+      </select>
+    ) : type === "textarea" ? (
+      <textarea className="form-control" name={name} value={value || ""} onChange={onChange} rows="3" />
+    ) : (
+      <input type={type} className="form-control" name={name} value={value || ""} onChange={onChange} />
+    )}
+  </div>
+));
+
+InputField.displayName = 'InputField';
 
 const AdminEditUser = () => {
   const { id } = useParams();
@@ -168,10 +203,10 @@ const AdminEditUser = () => {
     fetchUser();
   }, [id]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
@@ -243,22 +278,18 @@ const AdminEditUser = () => {
     </div>
   );
 
-  const InputField = ({ label, name, type = "text", options = null, col = "6" }) => (
-    <div className={`col-md-${col}`}>
-      <label className="form-label small fw-bold text-muted">{label}</label>
-      {options ? (
-        <select className="form-select" name={name} value={formData[name] || ""} onChange={handleChange}>
-          <option value="">Select {label}</option>
-          {options.map((opt, i) => (
-            <option key={i} value={opt}>{opt}</option>
-          ))}
-        </select>
-      ) : type === "textarea" ? (
-        <textarea className="form-control" name={name} value={formData[name] || ""} onChange={handleChange} rows="3" />
-      ) : (
-        <input type={type} className="form-control" name={name} value={formData[name] || ""} onChange={handleChange} />
-      )}
-    </div>
+  // Helper to create InputField with automatic props
+  const renderField = (label, name, type = "text", options = null, col = "6") => (
+    <InputField
+      key={name}
+      label={label}
+      name={name}
+      type={type}
+      options={options}
+      col={col}
+      value={formData[name]}
+      onChange={handleChange}
+    />
   );
 
   return (
@@ -306,21 +337,21 @@ const AdminEditUser = () => {
             <div className="tab-content" id="profileTabsContent">
               {/* BASIC INFO */}
               <FormSection title="Basic Personal Details" id="basic">
-                <InputField label="About Me" name="aboutMe" type="textarea" col="12" />
-                <InputField label="Full Name" name="userName" />
-                <InputField label="Email" name="userEmail" type="email" />
-                <InputField label="Phone" name="userMobile" />
-                <InputField label="Date of Birth" name="dateOfBirth" type="date" />
-                <InputField label="Gender" name="gender" options={["Male", "Female", "Other"]} />
-                <InputField label="Profile Created For" name="profileCreatedFor" options={["Self", "Son", "Daughter", "Brother", "Sister", "Friend"]} />
-                <InputField label="Marital Status" name="maritalStatus" options={["Never Married", "Divorced", "Awaiting Divorce", "Widow/Widower"]} />
-                <InputField label="Height" name="height" options={["4ft", "4ft 1in", "4ft 2in", "4ft 3in", "4ft 4in", "4ft 5in", "4ft 6in", "4ft 7in", "4ft 8in", "4ft 9in", "4ft 10in", "4ft 11in", "5ft", "5ft 1in", "5ft 2in", "5ft 3in", "5ft 4in", "5ft 5in", "5ft 6in", "5ft 7in", "5ft 8in", "5ft 9in", "5ft 10in", "5ft 11in", "6ft", "6ft 1in", "6ft 2in", "6ft 3in", "6ft 4in", "6ft 5in", "6ft 6in", "6ft 7in", "6ft 8in", "6ft 9in", "6ft 10in", "6ft 11in", "7ft"]} />
-                <InputField label="Weight" name="weight" />
-                <InputField label="Body Type" name="bodyType" options={["Average", "Slim", "Athletic", "Heavy"]} />
-                <InputField label="Complexion" name="complexion" options={["Fair", "Very Fair", "Wheatish", "Dark"]} />
-                <InputField label="Eating Habits" name="eatingHabits" options={["Vegetarian", "Non-Vegetarian", "Eggetarian"]} />
-                <InputField label="Mother Tongue" name="motherTongue" />
-                <InputField label="Caste" name="caste" />
+                {renderField("About Me", "aboutMe", "textarea", null, "12")}
+                {renderField("Full Name", "userName")}
+                {renderField("Email", "userEmail", "email")}
+                {renderField("Phone", "userMobile")}
+                {renderField("Date of Birth", "dateOfBirth", "date")}
+                {renderField("Gender", "gender", "text", GENDER_OPTIONS)}
+                {renderField("Profile Created For", "profileCreatedFor", "text", PROFILE_CREATED_FOR_OPTIONS)}
+                {renderField("Marital Status", "maritalStatus", "text", MARITAL_STATUS_OPTIONS)}
+                {renderField("Height", "height", "text", HEIGHT_OPTIONS)}
+                {renderField("Weight", "weight")}
+                {renderField("Body Type", "bodyType", "text", BODY_TYPE_OPTIONS)}
+                {renderField("Complexion", "complexion", "text", COMPLEXION_OPTIONS)}
+                {renderField("Eating Habits", "eatingHabits", "text", EATING_HABITS_OPTIONS)}
+                {renderField("Mother Tongue", "motherTongue")}
+                {renderField("Caste", "caste")}
               </FormSection>
 
               {/* GALLERY */}
@@ -339,65 +370,65 @@ const AdminEditUser = () => {
 
               {/* FAMILY */}
               <FormSection title="Family Background" id="family">
-                <InputField label="Father's Name" name="fathersName" />
-                <InputField label="Father's Occupation" name="fathersOccupation" />
-                <InputField label="Mother's Name" name="mothersName" />
-                <InputField label="Mother's Occupation" name="mothersOccupation" />
-                <InputField label="Family Value" name="familyValue" options={["Traditional", "Moderate", "Liberal"]} />
-                <InputField label="Family Type" name="familyType" options={["Joint", "Nuclear"]} />
-                <InputField label="Family Status" name="familyStatus" options={["Middle Class", "Upper Middle Class", "Rich", "Affluent"]} />
-                <InputField label="Native (Father)" name="fathersNative" />
-                <InputField label="Native (Mother)" name="mothersNative" />
-                <InputField label="No. of Brothers" name="numberOfBrothers" type="number" />
-                <InputField label="No. of Sisters" name="numberOfSisters" type="number" />
+                {renderField("Father's Name", "fathersName")}
+                {renderField("Father's Occupation", "fathersOccupation")}
+                {renderField("Mother's Name", "mothersName")}
+                {renderField("Mother's Occupation", "mothersOccupation")}
+                {renderField("Family Value", "familyValue", "text", FAMILY_VALUE_OPTIONS)}
+                {renderField("Family Type", "familyType", "text", FAMILY_TYPE_OPTIONS)}
+                {renderField("Family Status", "familyStatus", "text", FAMILY_STATUS_OPTIONS)}
+                {renderField("Native (Father)", "fathersNative")}
+                {renderField("Native (Mother)", "mothersNative")}
+                {renderField("No. of Brothers", "numberOfBrothers", "number")}
+                {renderField("No. of Sisters", "numberOfSisters", "number")}
               </FormSection>
 
               {/* RELIGIOUS */}
               <FormSection title="Religious Information" id="religious">
-                <InputField label="Religion" name="religion" />
-                <InputField label="Denomination" name="denomination" />
-                <InputField label="Church Name" name="church" />
-                <InputField label="Pastors Name" name="pastorsName" />
-                <InputField label="Religious Detail" name="religiousDetail" type="textarea" col="12" />
+                {renderField("Religion", "religion")}
+                {renderField("Denomination", "denomination")}
+                {renderField("Church Name", "church")}
+                {renderField("Pastors Name", "pastorsName")}
+                {renderField("Religious Detail", "religiousDetail", "textarea", null, "12")}
               </FormSection>
 
               {/* PROFESSIONAL */}
               <FormSection title="Education & Career" id="professional">
-                <InputField label="Education" name="education" />
-                <InputField label="College" name="college" />
-                <InputField label="Employment Type" name="employmentType" options={["Government", "Private", "Business", "Self Employed", "Not Working"]} />
-                <InputField label="Occupation" name="occupation" />
-                <InputField label="Income" name="annualIncome" />
-                <InputField label="Company Name" name="companyName" />
+                {renderField("Education", "education")}
+                {renderField("College", "college")}
+                {renderField("Employment Type", "employmentType", "text", EMPLOYMENT_TYPE_OPTIONS)}
+                {renderField("Occupation", "occupation")}
+                {renderField("Income", "annualIncome")}
+                {renderField("Company Name", "companyName")}
               </FormSection>
 
               {/* CONTACT */}
               <FormSection title="Contact Details" id="contact">
-                <InputField label="Current Address" name="currentAddress" type="textarea" col="12" />
-                <InputField label="City" name="city" />
-                <InputField label="State" name="state" />
-                <InputField label="Pincode" name="pincode" />
-                <InputField label="Citizen Of" name="citizenOf" />
-                <InputField label="Alternate Mobile" name="alternateMobile" />
-                <InputField label="Relationship to Contact" name="relationship" />
+                {renderField("Current Address", "currentAddress", "textarea", null, "12")}
+                {renderField("City", "city")}
+                {renderField("State", "state")}
+                {renderField("Pincode", "pincode")}
+                {renderField("Citizen Of", "citizenOf")}
+                {renderField("Alternate Mobile", "alternateMobile")}
+                {renderField("Relationship to Contact", "relationship")}
               </FormSection>
 
               {/* LIFESTYLE */}
               <FormSection title="Lifestyle & Interests" id="lifestyle">
-                <InputField label="Hobbies" name="hobbies" />
-                <InputField label="Interests" name="interests" />
-                <InputField label="Smoking Habits" name="smokingHabits" options={["No", "Yes", "Occasionally"]} />
-                <InputField label="Drinking Habits" name="drinkingHabits" options={["No", "Yes", "Occasionally"]} />
+                {renderField("Hobbies", "hobbies")}
+                {renderField("Interests", "interests")}
+                {renderField("Smoking Habits", "smokingHabits", "text", YES_NO_OPTIONS)}
+                {renderField("Drinking Habits", "drinkingHabits", "text", YES_NO_OPTIONS)}
               </FormSection>
 
               {/* PARTNER PREFERENCES */}
               <FormSection title="Ideal Partner Preferences" id="partner">
-                <InputField label="Age From" name="partnerAgeFrom" type="number" />
-                <InputField label="Age To" name="partnerAgeTo" type="number" />
-                <InputField label="Desired Height" name="partnerHeight" />
-                <InputField label="Preferred Marital Status" name="partnerMaritalStatus" />
-                <InputField label="Preferred Caste" name="partnerCaste" />
-                <InputField label="Preferred City/State" name="partnerState" />
+                {renderField("Age From", "partnerAgeFrom", "number")}
+                {renderField("Age To", "partnerAgeTo", "number")}
+                {renderField("Desired Height", "partnerHeight")}
+                {renderField("Preferred Marital Status", "partnerMaritalStatus")}
+                {renderField("Preferred Caste", "partnerCaste")}
+                {renderField("Preferred City/State", "partnerState")}
               </FormSection>
             </div>
 

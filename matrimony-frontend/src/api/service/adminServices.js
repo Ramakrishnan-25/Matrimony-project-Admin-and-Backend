@@ -345,3 +345,23 @@ export const deleteEnquiry = async (id) => {
 export const updateEnquiry = async (id, data) => {
   return await adminInstance.put(`/update-enquiry/${id}`, data);
 };
+
+
+/* =========================
+   FEEDBACK MANAGEMENT
+========================== */
+
+// Get All Feedbacks
+export const getAllFeedbacks = async () => {
+  return await adminInstance.get(`/get-all-feedbacks`);
+};
+
+// Update Feedback Status
+export const updateFeedback = async (id, data) => {
+  return await adminInstance.put(`/update-feedback/${id}`, data);
+};
+
+// Delete Feedback
+export const deleteFeedback = async (id) => {
+  return await adminInstance.delete(`/delete-feedback/${id}`);
+};

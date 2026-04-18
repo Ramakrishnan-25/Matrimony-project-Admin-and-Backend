@@ -25,6 +25,7 @@ import AdminUserPlan from "./components/admin/AdminUserPlan";
 
 import AdminBlogs from "./components/admin/AdminBlogs";
 import AdminEnquiries from "./components/admin/AdminEnquiries";
+import AdminFeedbacks from "./components/admin/AdminFeedbacks";
 
 
 function App() {
@@ -231,6 +232,14 @@ function App() {
           element={
             <AdminLayout>
               <AdminEnquiries />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/feedbacks"
+          element={
+            <AdminLayout>
+              <AdminFeedbacks />
             </AdminLayout>
           }
         />

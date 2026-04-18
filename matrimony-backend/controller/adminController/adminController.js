@@ -557,6 +557,8 @@ const deleteUser = async (req, res) => {
   }
 };
 
+
+
 /* =========================
    PERMANENT DELETE USER (Hard Delete)
 ========================== */
@@ -586,6 +588,7 @@ const permanentDeleteUser = async (req, res) => {
     });
   }
 };
+
 
 /* =========================
    GET USER BY ID
