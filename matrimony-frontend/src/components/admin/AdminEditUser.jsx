@@ -41,6 +41,15 @@ const InputField = React.memo(({ label, name, type = "text", options = null, col
 
 InputField.displayName = 'InputField';
 
+const FormSection = ({ title, children, id, activeTab }) => (
+  <div className={`tab-pane fade ${activeTab === id ? "show active" : ""}`} id={id} role="tabpanel">
+    <div className="card border-0 p-4">
+      <h5 className="fw-bold mb-4 border-bottom pb-2">{title}</h5>
+      <div className="row g-3">{children}</div>
+    </div>
+  </div>
+);
+
 const AdminEditUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -269,14 +278,6 @@ const AdminEditUser = () => {
     </NewLayout>
   );
 
-  const FormSection = ({ title, children, id }) => (
-    <div className={`tab-pane fade ${activeTab === id ? "show active" : ""}`} id={id} role="tabpanel">
-      <div className="card border-0 p-4">
-        <h5 className="fw-bold mb-4 border-bottom pb-2">{title}</h5>
-        <div className="row g-3">{children}</div>
-      </div>
-    </div>
-  );
 
   // Helper to create InputField with automatic props
   const renderField = (label, name, type = "text", options = null, col = "6") => (
@@ -336,7 +337,7 @@ const AdminEditUser = () => {
 
             <div className="tab-content" id="profileTabsContent">
               {/* BASIC INFO */}
-              <FormSection title="Basic Personal Details" id="basic">
+              <FormSection title="Basic Personal Details" id="basic" activeTab={activeTab}>
                 {renderField("About Me", "aboutMe", "textarea", null, "12")}
                 {renderField("Full Name", "userName")}
                 {renderField("Email", "userEmail", "email")}
@@ -369,7 +370,7 @@ const AdminEditUser = () => {
               </div>
 
               {/* FAMILY */}
-              <FormSection title="Family Background" id="family">
+              <FormSection title="Family Background" id="family" activeTab={activeTab}>
                 {renderField("Father's Name", "fathersName")}
                 {renderField("Father's Occupation", "fathersOccupation")}
                 {renderField("Mother's Name", "mothersName")}
@@ -384,7 +385,7 @@ const AdminEditUser = () => {
               </FormSection>
 
               {/* RELIGIOUS */}
-              <FormSection title="Religious Information" id="religious">
+              <FormSection title="Religious Information" id="religious" activeTab={activeTab}>
                 {renderField("Religion", "religion")}
                 {renderField("Denomination", "denomination")}
                 {renderField("Church Name", "church")}
@@ -393,7 +394,7 @@ const AdminEditUser = () => {
               </FormSection>
 
               {/* PROFESSIONAL */}
-              <FormSection title="Education & Career" id="professional">
+              <FormSection title="Education & Career" id="professional" activeTab={activeTab}>
                 {renderField("Education", "education")}
                 {renderField("College", "college")}
                 {renderField("Employment Type", "employmentType", "text", EMPLOYMENT_TYPE_OPTIONS)}
@@ -403,7 +404,7 @@ const AdminEditUser = () => {
               </FormSection>
 
               {/* CONTACT */}
-              <FormSection title="Contact Details" id="contact">
+              <FormSection title="Contact Details" id="contact" activeTab={activeTab}>
                 {renderField("Current Address", "currentAddress", "textarea", null, "12")}
                 {renderField("City", "city")}
                 {renderField("State", "state")}
@@ -414,7 +415,7 @@ const AdminEditUser = () => {
               </FormSection>
 
               {/* LIFESTYLE */}
-              <FormSection title="Lifestyle & Interests" id="lifestyle">
+              <FormSection title="Lifestyle & Interests" id="lifestyle" activeTab={activeTab}>
                 {renderField("Hobbies", "hobbies")}
                 {renderField("Interests", "interests")}
                 {renderField("Smoking Habits", "smokingHabits", "text", YES_NO_OPTIONS)}
@@ -422,7 +423,7 @@ const AdminEditUser = () => {
               </FormSection>
 
               {/* PARTNER PREFERENCES */}
-              <FormSection title="Ideal Partner Preferences" id="partner">
+              <FormSection title="Ideal Partner Preferences" id="partner" activeTab={activeTab}>
                 {renderField("Age From", "partnerAgeFrom", "number")}
                 {renderField("Age To", "partnerAgeTo", "number")}
                 {renderField("Desired Height", "partnerHeight")}
