@@ -68,7 +68,7 @@ const multer = require("multer");
 const userAuthRoutes = express.Router();
 const userAuthController = require("../../controller/userController/userAuthController");
 const userChatController = require("../../controller/userController/userChatController");
-
+const enquiryController = require("../../controller/userController/enquiryController");
 // Multer storage for images & video
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -168,6 +168,11 @@ userAuthRoutes.post(
   "/report-issue",
   upload.single("attachment"),
   userAuthController.reportIssue
+);
+
+userAuthRoutes.post(
+  "/submit-enquiry",
+  enquiryController.createEnquiry
 );
 
 userAuthRoutes.get(

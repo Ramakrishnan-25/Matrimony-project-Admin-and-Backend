@@ -30,12 +30,14 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
   "http://localhost:5177",
   "https://agape-vows-matrimony-final.vercel.app",
   "https://agape-vows-matrimony-final-2v1i.vercel.app",
   "https://matrimony-project-client.vercel.app",
-   "https://matrimony-project-admin-and-backend.vercel.app"
- 
+  "https://matrimony-project-admin-and-backend.vercel.app",
+  "https://agape-vows-new-template-matrimony-3.vercel.app", // ✅ New deployment
 ];
 
 const corsOptions = {

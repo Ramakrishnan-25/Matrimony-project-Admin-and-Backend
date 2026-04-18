@@ -51,7 +51,7 @@ const planController = require("../../controller/adminController/planController"
 const eventController = require("../../controller/adminController/eventController");
 const blogController = require("../../controller/adminController/blogController");
 const issueController = require("../../controller/adminController/issueController");
-
+const enquiryController = require("../../controller/adminController/enquiryController");
 const upload = require("../../middleware/multer");
 
 /* =========================
@@ -126,6 +126,20 @@ adminRoutes.put(
 );
 
 adminRoutes.delete("/delete-event/:id", eventController.deleteEvent);
+
+
+
+// GET all enquiries
+adminRoutes.get(
+  "/get-all-enquiries",
+  enquiryController.getAllEnquiries
+);
+
+// DELETE enquiry
+adminRoutes.delete(
+  "/delete-enquiry/:id",
+  enquiryController.deleteEnquiry
+);
 
 /* =========================
    BLOG MANAGEMENT

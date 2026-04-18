@@ -336,7 +336,7 @@ const AdminEnquiries = () => {
         </div>
 
         {/* ========== TABLE ========== */}
-        <div className="card border-0 shadow-sm" style={{ borderRadius: "12px", overflow: "hidden" }}>
+        <div className="card border-0 shadow-sm" style={{ borderRadius: "12px", overflow: "visible" }}>
           <div className="card-body p-0">
             {filteredEnquiries.length > 0 ? (
               <div style={{ width: "100%", overflow: "visible" }}>
@@ -430,7 +430,7 @@ const AdminEnquiries = () => {
                           {new Date(item.createdAt).toLocaleDateString()}
                         </td>
 
-                        <td style={{ padding: "15px", textAlign: "center", position: "relative", zIndex: 10 }}>
+                        <td style={{ padding: "15px", textAlign: "center", position: "relative" }}>
                           <div className="dropdown" style={{ display: "inline-block" }}>
                             <button
                               className="btn btn-light btn-sm rounded-circle"
@@ -452,24 +452,23 @@ const AdminEnquiries = () => {
                               ⋯
                             </button>
 
-                            <ul 
-                              className="dropdown-menu dropdown-menu-end" 
-                              style={{ 
-                                borderRadius: "10px", 
-                                border: "1px solid #f0f0f0",
-                                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-                                minWidth: "220px",
-                                padding: "12px 0",
-                                overflow: "hidden",
-                                backgroundColor: "#fff",
-                              }}
-                            >
+                          <ul 
+  className="dropdown-menu dropdown-menu-end"
+  style={{ 
+    borderRadius: "8px",
+    border: "1px solid #e0e0e0",
+    minWidth: "160px",
+    padding: "6px 0",
+    backgroundColor: "#fff",
+    zIndex: 9999,   // 🔥 IMPORTANT
+  }}
+>
                               {/* VIEW MESSAGE */}
                               <li>
                                 <button
                                   onClick={() => handleViewMessage(item)}
                                   style={{
-                                    padding: "14px 18px",
+                                    padding: "8px 12px",
                                     fontSize: "14px",
                                     fontWeight: "500",
                                     cursor: "pointer",
@@ -479,7 +478,7 @@ const AdminEnquiries = () => {
                                     textAlign: "left",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "12px",
+                                    gap: "8px",
                                     color: "#333",
                                     transition: "all 0.2s ease",
                                   }}
@@ -492,7 +491,7 @@ const AdminEnquiries = () => {
                                     e.currentTarget.style.color = "#333";
                                   }}
                                 >
-                                  <span style={{ fontSize: "20px", width: "24px", textAlign: "center" }}>👁️</span>
+                                  <span style={{ fontSize: "16px", width: "20px", textAlign: "center" }}>👁️</span>
                                   <span>View Message</span>
                                 </button>
                               </li>
@@ -504,7 +503,7 @@ const AdminEnquiries = () => {
                                   data-bs-target="#enquiryModal"
                                   onClick={() => handleOpenModal(item)}
                                   style={{
-                                    padding: "14px 18px",
+                                    padding: "8px 12px",
                                     fontSize: "14px",
                                     fontWeight: "500",
                                     cursor: "pointer",
@@ -514,7 +513,7 @@ const AdminEnquiries = () => {
                                     textAlign: "left",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "12px",
+                                    gap: "8px",
                                     color: "#333",
                                     transition: "all 0.2s ease",
                                   }}
@@ -527,7 +526,7 @@ const AdminEnquiries = () => {
                                     e.currentTarget.style.color = "#333";
                                   }}
                                 >
-                                  <span style={{ fontSize: "20px", width: "24px", textAlign: "center" }}>✏️</span>
+                                  <span style={{ fontSize: "16px", width: "20px", textAlign: "center" }}>✏️</span>
                                   <span>Edit Status</span>
                                 </button>
                               </li>
@@ -540,7 +539,7 @@ const AdminEnquiries = () => {
                                 <button
                                   onClick={() => handleDelete(item._id)}
                                   style={{
-                                    padding: "14px 18px",
+                                    padding: "8px 12px",
                                     fontSize: "14px",
                                     fontWeight: "500",
                                     cursor: "pointer",
@@ -550,7 +549,7 @@ const AdminEnquiries = () => {
                                     textAlign: "left",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "12px",
+                                    gap: "8px",
                                     color: "#ff6b6b",
                                     transition: "all 0.2s ease",
                                   }}
@@ -563,7 +562,7 @@ const AdminEnquiries = () => {
                                     e.currentTarget.style.color = "#ff6b6b";
                                   }}
                                 >
-                                  <span style={{ fontSize: "20px", width: "24px", textAlign: "center" }}>🗑️</span>
+                                  <span style={{ fontSize: "16px", width: "20px", textAlign: "center" }}>🗑️</span>
                                   <span>Delete</span>
                                 </button>
                               </li>
