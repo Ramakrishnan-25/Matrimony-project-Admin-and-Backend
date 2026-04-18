@@ -558,6 +558,36 @@ const deleteUser = async (req, res) => {
 };
 
 /* =========================
+   PERMANENT DELETE USER (Hard Delete)
+========================== */
+const permanentDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedUser = await userModel.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User permanently deleted successfully",
+      deletedUser: deletedUser,
+    });
+  } catch (err) {
+    console.error("Error permanently deleting user:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+/* =========================
    GET USER BY ID
 ========================== */
 const getUserById = async (req, res) => {
@@ -773,6 +803,7 @@ module.exports = {
   verifyAdmin,
   getAllUsersData,
   deleteUser,
+  permanentDeleteUser,
   getUserById,
   restoreUser,
   updateUser,
